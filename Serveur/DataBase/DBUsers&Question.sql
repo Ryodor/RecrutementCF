@@ -72,7 +72,7 @@ CREATE TABLE Answers
 /* Les choix de chaques questions */
 CREATE TABLE  Choice
 (
-	choiceId INT PRIMARY KEY NOT NULL,
+	choiceId INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 	textResponse text,
     questionId INT,
     rightAnswer BOOLEAN,
