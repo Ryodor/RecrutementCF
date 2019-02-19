@@ -27,3 +27,13 @@ VALUES
 ('En java, comment déclarer une variable globale ?', null, 2);
 select * from Question;
 
+/* Insertion des questions */
+INSERT INTO Choice(textResponse, questionId, rightAnswer)
+VALUES 
+('Un acteur ', 1, false),
+('Un Rappeur', 1, false),
+('Un personage fictif', 1, false),
+('Un maltraiteur de petit singe', 1, true);
+select * from Choice;
+
+
