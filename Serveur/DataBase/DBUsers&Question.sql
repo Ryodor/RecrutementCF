@@ -19,10 +19,10 @@ CREATE TABLE Users
 );
 
 /* Réfèrence la liste des types de question possible */
-CREATE TABLE QuestionType
+CREATE TABLE Categories
 (
-    typeId INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    typeName varchar(100)
+    categoryId INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    categoryName varchar(100)
 );
 
 /* Réfèrence la liste des types de question possible */
@@ -35,20 +35,19 @@ CREATE TABLE ProgLanguage
 /* Contient la liste de toutes les questions */
 CREATE TABLE Question
 (
-    questionId INT PRIMARY KEY NOT NULL,
+    questionId INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     questionText TEXT,
-    questionTypeId INT,
+    categoryId INT,
     progLanguageId INT,
-	FOREIGN KEY (questionTypeId) REFERENCES QuestionType(typeId),
+	FOREIGN KEY (categoryId) REFERENCES Categories(categoryId),
 	FOREIGN KEY (progLanguageId) REFERENCES ProgLanguage(languageId)
-
 );
 
 
 /* Cette table contient les information sur les résultats d'examen du postulant */
 CREATE TABLE SessionStudent
 (
-    sessionStudentId INT PRIMARY KEY NOT NULL,
+    sessionStudentId INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     userId INT,
     beginningSession DATETIME, #Calcul du chrono de l'étudiant via la différence entre les deux dates
     endSession DATETIME,
@@ -60,12 +59,12 @@ CREATE TABLE SessionStudent
 /* Réponses du postulant */
 CREATE TABLE Answers
 (
-    answerId INT PRIMARY KEY NOT NULL,
-    sessionStudentId int, 
+    answerId INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    userId int, 
     questionId int, #Id de la question
 	rightAnswer BOOLEAN, #s'il à répondu, est ce que c'est la bonne réponse
     choiceId int,
-	FOREIGN KEY (sessionStudentId) REFERENCES SessionStudent(sessionStudentId),
+	FOREIGN KEY (userId) REFERENCES Users(userId),
     FOREIGN KEY (questionId) REFERENCES Question(questionId),
 	FOREIGN KEY (choiceId) REFERENCES Question(questionId)
 );
