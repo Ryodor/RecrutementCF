@@ -36,4 +36,14 @@ VALUES
 ('Un maltraiteur de petit singe', 1, true);
 select * from Choice;
 
+/* Insertion de la session des résultats de l'étudiant APRES sa session */
+INSERT INTO SessionStudent (userId, beginningSession, endSession, questionsAnswered, score)
+VALUES
+(1, NOW(), NOW(), 21, 2094);
+
+INSERT INTO Answers (userId, questionId, rightAnswer, choiceId)
+VALUES
+(1, 2, true, 4);
+
+
 
