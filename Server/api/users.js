@@ -1,9 +1,10 @@
-var express = require('express');
-var router = express.Router();
-let bcrypt   = require('bcrypt');
+let express = require('express');
+let router = express.Router();
+let bcrypt = require('bcrypt');
+let generatePassword = require('password-generator');
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
     db.query('SELECT * FROM Users', function (error, results, fields) {
         if (error) throw error;
         res.json(results);
@@ -11,36 +12,167 @@ router.get('/', function(req, res, next) {
 });
 
 /* POST users login listing. */
-router.post('/login', function(req, res, next) {
-    user = JSON.parse(req.query.user);
-    console.log("[DEBUG-USER] ",user);
+router.post('/login', function (req, res, next) {
+    let user = JSON.parse(req.query.user);
+    console.log("[DEBUG-USER] ", user);
+    let checkLogin = checkObjectUserLogin(user)
+    if(checkLogin.isValid){
+        db.execute('SELECT lastName, firstName, ID, userPassword FROM `Users` WHERE `email`= ? ', [user.email], function (error, results, fields) {
+            if (error) throw error;
 
-    db.execute('SELECT lastName, firstName, userId, userPassword FROM `Users` WHERE `email`= ? ', [user.email], function (error, results, fields) {
-        if (error) throw error;
-        console.log("-----------------");
-        console.log(req.cookies);
-        console.log(req.session);
-        console.log(req.sessionID);
-        console.log("-----------------");
-
-        if(results.length > 0){
-            if(validPassword(user.password,results[0].userPassword))
-                return res.send({response:{userId:results[0].userId,lastName:results[0].lastName,firstName:results[0].firstName,sessionID:req.sessionID,email:results[0].email},error:""});
-            else
-                return res.send({response:"",error:"Password invalide"})
-        }
-        else
-            return res.send({response:"",error:"Login invalide"})
-    });
-    //res.send('ok');
+            if (results.length > 0) {
+                if (validPassword(user.password, results[0].userPassword))
+                    return res.send({
+                        response: {
+                            userId: results[0].userId,
+                            lastName: results[0].lastName,
+                            firstName: results[0].firstName,
+                            sessionID: req.sessionID
+                        }, error: ""
+                    });
+                else
+                    return res.send({response: "", error: "Password invalide"})
+            } else
+                return res.send({response: "", error: "Login invalide"})
+        });
+    }else
+        return res.send({response: "", error: "Valeur ou/et syntax, envoyer sont invalide  "+checkLogin.errorValue.toString()})
 });
 
-function generateHash(password){
+/* POST users register listing. */
+router.post('/register', function (req, res, next) {
+    let user = JSON.parse(req.query.user);
+    console.log("[DEBUG-USER] ", user);
+    let checkRegister = checkObjectUserRegister(user);
+    if(checkRegister.isValid){
+        db.execute('SELECT ID FROM `Users` WHERE `email`= ? ', [user.email], function (error, results, fields) {
+            if (error) throw error;
+
+            if (results.length == 0) {
+
+                //let password = generatePassword(6, false)
+                let password = "";
+                for(let i = 0;i<6;i++){
+                    password+= Math.floor((Math.random() * 10));
+                }
+                const passwordHash = generateHash(password)
+
+                let date = new Date()
+                let testDate = date.getFullYear()+"-"+date.getMonth()+"-"+date.getHours()+" "+date.getHours()+"-"+date.getMinutes()+"-"+date.getSeconds()
+
+                /* envoie du mail de confirmation avec le mot de passe */
+                // TODO : Envoie de mail de verification.
+
+                /* Enregisterment du compte dans la base de donnée */
+                db.execute('INSERT INTO Users (lastName, firstName, email, userPassword, lawLevel, birthdate, testDate, activatedAccount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    [user.lastName, user.firstName, user.email, passwordHash, 0, user.birthdate, testDate,  1],
+                    function (error, results, fields) {
+                        console.log("[DEBUG] ",results)
+                        if (error) throw error;
+                        else
+                            return res.send({
+                                response: {
+                                    id: results.insertId,
+                                    lastName: user.lastName,
+                                    firstName: user.firstName,
+                                    password: password,
+                                    sessionID: req.sessionID
+                                }, error: ""
+                            });
+                    })
+            } else
+                return res.send({response: "", error: "L'email a déjà était enregistré."})
+        });
+    }else
+        return res.send({response: "", error: "Valeur ou/et syntax, envoyer sont invalide "+checkRegister.errorValue.toString()})
+});
+
+function generateHash(password) {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
 }
 
-function validPassword(password, passwordHash){
+function validPassword(password, passwordHash) {
     return bcrypt.compareSync(password, passwordHash);
+}
+
+function checkObjectUserRegister(user){
+    if(typeof user == "object"){
+
+        if(Object.keys(user).length == 4){
+            let validKeyName = 0
+            let validValue = 0
+
+            check = {
+                isValid: false,
+                errorValue:[]
+            }
+
+            for(key in user){
+                if(key == "lastName" || key == "firstName" ||  key == "email" ||  key == "birthdate")
+                    validKeyName += 1;
+            }
+
+            for(key in user){
+                if(key == "lastName" || key == "firstName"){
+                    if(/^[a-zA-Z]+$/.test(user[key]))
+                        validValue += 1
+                    else
+                        check.errorValue.push(key)
+                }
+                if(key == "email"){
+                    if(/^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(user[key]))
+                        validValue += 1;
+                    else
+                        check.errorValue.push(key)
+                }
+                if(key == "birthdate"){
+                    let regexDate = new RegExp(/^(19[0-9][0-9]|202[0-9])-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$/)
+                    if(regexDate.test(user[key]))
+                        validValue += 1
+                    else
+                        check.errorValue.push(key)
+                }
+            }
+
+            if(validKeyName == 4 && validValue == 4){
+                check.isValid = true;
+                return check;
+            }
+        }
+    }
+    return check;
+}
+
+function checkObjectUserLogin(user){
+    if(typeof user == "object"){
+        if(Object.keys(user).length == 2){
+            let validKeyName = 0
+            let validValue = 0
+            check = {
+                isValid: false,
+                errorValue:[]
+            }
+
+            for(key in user){
+                if(key == "email" ||  key == "password")
+                    validKeyName += 1;
+            }
+
+            for(key in user){
+                if(key == "email"){
+                    if(/^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(user[key]))
+                        validValue += 1;
+                    else
+                        check.errorValue.push(key)
+                }
+            }
+
+            if(validKeyName == 2 && validValue == 1){
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 module.exports = router;
