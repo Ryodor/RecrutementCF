@@ -36,9 +36,9 @@ router.post('/login', function (req, res, next) {
                         }, error: ""
                     });
                 else
-                    return res.send({response: "", error: "Password invalide"})
+                    return res.send({response: "", error: "Invalid Password"})
             } else
-                return res.send({response: "", error: "Login invalide"})
+                return res.send({response: "", error: "Invalid Login"})
         });
     }else
         return res.send({response: "", error: "Valeur ou/et syntax, envoyer sont invalide  "+checkLogin.errorValue.toString()})
