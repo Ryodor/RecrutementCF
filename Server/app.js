@@ -10,7 +10,7 @@ var cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./api/users');
-
+var qcmRouter = require('./api/qcm');
 
 var app = express();
 
@@ -37,6 +37,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/qcm', qcmRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

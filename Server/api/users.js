@@ -13,9 +13,14 @@ router.get('/', function (req, res, next) {
 
 /* POST users login listing. */
 router.post('/login', function (req, res, next) {
-    let user = JSON.parse(req.query.user);
-    console.log("[DEBUG-USER] ", user);
+    console.log(req.body)
+    let user = req.body.user
+
+    if(typeof req.body != 'object')
+        user = JSON.parse(req.body.user)
+
     let checkLogin = checkObjectUserLogin(user)
+    console.log(checkLogin.errorValue)
     if(checkLogin.isValid){
         db.execute('SELECT lastName, firstName, ID, userPassword FROM `Users` WHERE `email`= ? ', [user.email], function (error, results, fields) {
             if (error) throw error;
@@ -168,11 +173,12 @@ function checkObjectUserLogin(user){
             }
 
             if(validKeyName == 2 && validValue == 1){
-                return true;
+                check.isValid = true;
+                return check;
             }
         }
     }
-    return false;
+    return check;
 }
 
 module.exports = router;
