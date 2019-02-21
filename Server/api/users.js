@@ -46,8 +46,12 @@ router.post('/login', function (req, res, next) {
 
 /* POST users register listing. */
 router.post('/register', function (req, res, next) {
-    let user = JSON.parse(req.query.user);
-    console.log("[DEBUG-USER] ", user);
+    console.log("[DEBUG-REGISTER-BODY]" ,req.body)
+    let user = req.body.user
+
+    if(typeof req.body != 'object')
+        user = JSON.parse(req.body.user)
+
     let checkRegister = checkObjectUserRegister(user);
     if(checkRegister.isValid){
         db.execute('SELECT ID FROM `Users` WHERE `email`= ? ', [user.email], function (error, results, fields) {
