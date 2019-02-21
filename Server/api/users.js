@@ -96,6 +96,80 @@ router.post('/register', function (req, res, next) {
         return res.send({response: "", error: "Valeur ou/et syntax, envoyer sont invalide "+checkRegister.errorValue.toString()})
 });
 
+router.get('/lang', function (req, res, next) {
+    console.log("[DEBUG] test");
+    db.execute('SELECT * FROM `ProgLanguage`', function (error, results, fields) {
+        if (error) throw error;
+        if (results.length > 0) {
+            return res.send({
+               response:{
+                   languages: results
+               },
+                error: ""
+            });
+        } else
+            return res.send({
+                response: "",
+                error: "Erreur, aucun langage trouver"
+            })
+    })
+})
+
+router.get('/formations', function (req, res, next) {
+    console.log("[DEBUG] test");
+    let formations;
+    let cities;
+    console.log()
+    db.execute('SELECT * FROM `Formations`', function (error, results, fields) {
+        if (error) throw error;
+        if(results.length > 0){
+            formations = results;
+            console.log(results)
+            console.log("[DEBUG] 1",formations);
+
+        }else
+            return res.send({
+                response: "",
+                error:"Erreur, aucune formation trouvee"
+            })
+    })
+
+    db.execute('SELECT * FROM `City`', function (error, results, fields) {
+        if (error) throw error;
+        if(results.length > 0){
+            cities = results;
+            console.log(results)
+            console.log("[DEBUG] 1",cities);
+
+        }else
+            return res.send({
+                response:"Erreur, aucun lieu de formation trouve"
+            })
+    })
+
+    db.execute('SELECT * FROM `FormationTypes`', function (error, results, fields) {
+        if (error) throw error;
+        if(results.length > 0){
+            return res.send({
+                response: {
+                    formations: formations,
+                    cities: cities,
+                    types: results
+                },
+                error: ""
+            })
+        }else
+            return res.send({
+                response: "",
+                error:"Erreur, aucun type de formation trouve"
+            })
+    })
+
+
+})
+
+// ========================================================
+
 function generateHash(password) {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
 }

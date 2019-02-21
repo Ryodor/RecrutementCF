@@ -9,7 +9,7 @@ var db = require('../database');
 var debug = require('debug')('server:server');
 var http = require('http');
 
-global.db = db;
+db.then(response=>{global.db = response;console.log("[database] db initializer.")}).catch(e=>console.log("[database] ",e));
 
 /**
  * Get port from environment and store in Express.
