@@ -19,11 +19,14 @@ router.get('/', function (req, res, next) {
     })
 
 })
+db.execute
+router.get('/start', function (req, res, next) {
 
-router.get('/generate', function (req, res, next) {
+    db.execute('SELECT * FROM `Categories` WHERE `ID` = ?',[1],function(error, results, fields){
 
+    })
     /* Creation  d'un template de QCM est l'envoie en json */
-    db.execute('SELECT * FROM `Choice`,`Question` WHERE `Choice`.`questionId` = `Question`.`ID` AND `Question`.`ID` = 1',function(error, results, fields){
+    db.execute('SELECT * FROM `Choice`,`Question` WHERE `Choice`.`questionId` = `Question`.`ID` AND `Question`.`categoryId` = ?', [1],function(error, results, fields){
         if (error) throw error;
 
         if (results.length > 0) {
