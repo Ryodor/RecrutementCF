@@ -87,13 +87,13 @@ router.post('/register', function (req, res, next) {
                             if (error) throw error;
                             else {
                                 db.execute('INSERT INTO `FormationWishes` (userId, formationId, cityId, typeId) VALUES (?,?,?,?)', [results.insertId, user.formationName, user.formationCity, user.formationType])
-                                insertLangageUsers(results.insertId, user.langages)
+                                insertLangageUsers(results.insertId, user.languages)
                                 req.user = {
                                     id: results.insertId,
                                     firstName: user.firstName,
                                     lastName: user.lastName,
                                     sessionID: req.sessionID,
-                                    langages: user.langages
+                                    languages: user.languages
                                 }
                                 req.user.checkHash = bcrypt.hashSync(req.user.id.toString() + req.user.firstName + req.user.lastName + req.user.sessionID.toString, bcrypt.genSaltSync(1), null)
                                 console.log(req.user)
@@ -102,6 +102,7 @@ router.post('/register', function (req, res, next) {
                                         id: results.insertId,
                                         firstName: user.firstName,
                                         lastName: user.lastName,
+                                        login: user.email,
                                         sessionID: req.sessionId,
                                         checkHash: user.checkHash,
                                         password: password
@@ -237,7 +238,7 @@ function checkObjectUserRegister(user) {
             let validValue = 0
 
             for (key in user) {
-                if(key == "lastName" || key == "firstName" || key == "email" || key == "birthdate" || "langages" || "formationName" || "formationCity" || "formationType"){
+                if(key == "lastName" || key == "firstName" || key == "email" || key == "birthdate" || "languages" || "formationName" || "formationCity" || "formationType"){
                     validKeyName += 1;
                 }else
                     check.errorValue.push(key)
