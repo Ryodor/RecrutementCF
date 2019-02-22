@@ -4,11 +4,22 @@ $(document).ready(function () {
         $last_name = $('#last_name'),
         $email = $("#email"),
         $email_confirm =$("#email_confirm")
+        $birthdate = $("#birthDate"),
+        $formation_name = $("#formationNameSelect"),
+        $formation_type = $("#formationTypesSelect"),
+        $formation_city = $("#formationCitiesSelect");
 
 
     $("#registerForm").on('submit', function (e) {
         e.preventDefault();
-        if(!checkEmail() || !checkFirstName() || !checkLastName()) return;
+        if(!checkEmail() || !checkFirstName() || !checkLastName() || !checkFormation()) return;
+
+        var lang = []; 
+        $(".lang-check").each(function() {
+            if($(this).prop("checked")){
+                lang.push($(this).val());
+            }
+        })
 
         var settings = {
             "async": true,
@@ -20,19 +31,33 @@ $(document).ready(function () {
                 "cache-control": "no-cache"
             },
             "processData": false,
-            "data": JSON.stringify({user:{lastName:$last_name.val(), firstName:$first_name.val(), email:$email.val(), birthdate:$("#birthDate").val()}}),
+            "data": JSON.stringify({
+                user:{
+                    lastName: $last_name.val(), 
+                    firstName: $first_name.val(), 
+                    email: $email.val(), 
+                    birthdate: $birthdate.val(),
+                    formationName: $formation_name.val(),
+                    formationType: $formation_type.val(),
+                    formationCity: $formation_city.val(),
+                    languages: lang
+                }
+            }),
             "error": function(xhr, ajaxOptions, thrownError){
                 console.log(xhr.status);
                 console.log(thrownError);
             }
         }
 
-        $.ajax(settings).done(function(response){
-            if(response.response){
-                console.log("Succeeded : ", response);
+        $.ajax(settings).done(function(data){
+            if(data.response){
+                console.log("Succeeded : ", data);
+                localStorage.setItem("codingLogin",data.response.login);
+                localStorage.setItem("codingPassword",data.response.password);
+                window.location = "./ExplanationScreen.html";
             }
             else {
-                alert("Error : " + response.error);
+                alert("Error : " + data.error);
             }
         })
     });
@@ -48,6 +73,45 @@ $(document).ready(function () {
     $email_confirm.on("change", function(){
         checkEmail();
     });
+    checkEmail = function(){
+        if($email_confirm.val() != $email.val()){ // si la chaîne de caractères est inférieure à 6
+            $email_confirm.addClass("invalid-field");
+            return false;
+        }
+        else{
+            $email_confirm.removeClass("invalid-field");
+            return true;
+        }
+    }
+    checkLastName = function(){
+        if ($last_name.val().length < 1) { // si la chaîne de caractères est inférieure à 6
+            $last_name.addClass("invalid-field");
+            return false;
+        }
+        else {
+            $last_name.removeClass("invalid-field");
+            return true;
+        }
+    }
+    checkFirstName = function(){
+        if ($first_name.val().length < 1) { // si la chaîne de caractères est inférieure à 6
+            $first_name.addClass("invalid-field");
+            return false;
+        }
+        else {
+            $first_name.removeClass("invalid-field");
+            return true;
+        }
+    }
+    checkFormation= function(){
+        if ($formation_name.val() < 1 || $formation_city.val() < 1 || $formation_city.val() < 1) { // si la chaîne de caractères est inférieure à 6
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+    
 
     fillFormationSelects();
     getLanguages();
@@ -55,36 +119,6 @@ $(document).ready(function () {
 
 
 
-checkEmail = function(){
-    if($email_confirm.val() != $email.val()){ // si la chaîne de caractères est inférieure à 6
-        $email_confirm.addClass("invalid-field");
-        return false;
-    }
-    else{
-        $email_confirm.removeClass("invalid-field");
-        return true;
-    }
-}
-checkLastName = function(){
-    if ($last_name.val().length < 1) { // si la chaîne de caractères est inférieure à 6
-        $last_name.addClass("invalid-field");
-        return false;
-    }
-    else {
-        $last_name.removeClass("invalid-field");
-        return true;
-    }
-}
-checkFirstName = function(){
-    if ($first_name.val().length < 1) { // si la chaîne de caractères est inférieure à 6
-        $first_name.addClass("invalid-field");
-        return false;
-    }
-    else {
-        $first_name.removeClass("invalid-field");
-        return true;
-    }
-}
 
 
 fillFormationSelects = function(){
@@ -155,6 +189,7 @@ getLanguages = function(){
                 var myLabel = document.createElement("label");
                 var myCheckbox = document.createElement("input");
                 $(myCheckbox).attr("type",'checkbox');
+                $(myCheckbox).addClass('lang-check');
                 $(myCheckbox).attr("value",data.response.languages[i].ID);
                 $(myCheckbox).appendTo($(myLabel));      
                 
@@ -164,9 +199,6 @@ getLanguages = function(){
 
                 $("#langContainer").append($(myLabel));
             }
-            console.log(content);
-            
-            console.log(content);
         }
         else {
             alert("Error : " + data.error);
