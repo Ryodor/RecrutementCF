@@ -35,6 +35,83 @@ router.post('/login', function (req, res, next) {
                             sessionID: req.sessionID,
                             checkHash: bcrypt.hashSync(this.id.toString() + this.firstName + this.lastName + this.sessionID.toString(), bcrypt.genSaltSync(1), null)
                         }
+                        req.user.questions = []
+                        req.user.questions.navigator = {
+                            currentCategory: 0,
+                            currentQuestion: 0,
+                            qcmTimer:"00:30:00",
+                            allCategoriesExists: Categories,
+                            isVaildCategory: function(checkValue){
+                                if(/^[0-9]+^$/.test(catgeory)){
+                                    this.allCategoriesExists.forEach(category=>{
+                                        if(category.id == checkValue)
+                                            return true
+                                        else
+                                            return false
+                                    })
+                                }else if(/^[a-zA-Z]+^$/.test(catgeory)){
+                                    this.allCategoriesExists.forEach(category=>{
+                                        if(category.categoryName == checkValue)
+                                            return true
+                                        else
+                                            return false
+                                    })
+                                }
+                                return false
+                            },
+                            isVaildQuestionId: function(questionId, categoryId){
+                                if(req.user.questions[categoryId][questionId] != undefined){
+                                    return true
+                                }
+                                return false
+                            },
+                            changeCategory: function (categoryId) {
+                                if(this.isVaildCategory){
+                                    let iterator = req.user.questions.keys;
+                                    let findKey = false;
+                                    for(key of iterator){
+                                        if(key == categoryId){
+                                            findKey = true;
+                                            break;
+                                        }
+                                    }
+                                    if(!findKey){
+                                        //return new Promise((resolve, reject) => {
+                                        generateQuestionsByCategory(categoryId, user.langages)
+                                            .then(result=>{
+                                                req.user.questions[categoryId] = result
+                                                return true;
+                                            })
+                                            .catch(error=>{
+                                                console.error(error)
+                                                return false;
+                                            })
+                                        //})
+                                    }
+                                    this.currentCategory = categoryId;
+                                }else{
+                                    return false;
+                                }
+                            },
+                            changeQuestion: function (questionId, catgeoryId) {
+                                if(req.user.questions[catgeoryId] == undefined){
+                                    if(this.changeCategory(catgeoryId)){
+                                        this.currentCategory = catgeoryId
+                                        this.currentQuestion = 0
+                                        return req.user.questions[catgeoryId][0]
+                                    }
+                                    return "Catégorie invalide"
+                                }else{
+                                    if(this.isVaildCategory(catgeoryId) && this.isVaildQuestionId(questionId,catgeoryId)){
+                                        this.currentCategory = catgeoryId
+                                        this.currentQuestion = questionId
+                                        return req.user.questions[catgeoryId][questionId]
+                                    }
+                                    return "categoryId ou questionId Invalide"
+                                }
+                            }
+                        }
+
                         return res.json({response: req.user, error: ""})
                     } else
                         return res.json({response: "", error: "Invalid Password"})
@@ -96,6 +173,84 @@ router.post('/register', function (req, res, next) {
                                     languages: user.languages
                                 }
                                 req.user.checkHash = bcrypt.hashSync(req.user.id.toString() + req.user.firstName + req.user.lastName + req.user.sessionID.toString, bcrypt.genSaltSync(1), null)
+
+                                req.user.questions = []
+                                req.user.questions.navigator = {
+                                    currentCategory: 0,
+                                    currentQuestion: 0,
+                                    qcmTimer:"00:30:00",
+                                    allCategoriesExists: Categories,
+                                    isVaildCategory: function(checkValue){
+                                        if(/^[0-9]+^$/.test(catgeory)){
+                                            this.allCategoriesExists.forEach(category=>{
+                                                if(category.id == checkValue)
+                                                    return true
+                                                else
+                                                    return false
+                                            })
+                                        }else if(/^[a-zA-Z]+^$/.test(catgeory)){
+                                            this.allCategoriesExists.forEach(category=>{
+                                                if(category.categoryName == checkValue)
+                                                    return true
+                                                else
+                                                    return false
+                                            })
+                                        }
+                                        return false
+                                    },
+                                    isVaildQuestionId: function(questionId, categoryId){
+                                        if(req.user.questions[categoryId][questionId] != undefined){
+                                            return true
+                                        }
+                                        return false
+                                    },
+                                    changeCategory: function (categoryId) {
+                                        if(this.isVaildCategory){
+                                            let iterator = req.user.questions.keys;
+                                            let findKey = false;
+                                            for(key of iterator){
+                                                if(key == categoryId){
+                                                    findKey = true;
+                                                    break;
+                                                }
+                                            }
+                                            if(!findKey){
+                                                //return new Promise((resolve, reject) => {
+                                                generateQuestionsByCategory(categoryId, user.langages)
+                                                    .then(result=>{
+                                                        req.user.questions[categoryId] = result
+                                                        return true;
+                                                    })
+                                                    .catch(error=>{
+                                                        console.error(error)
+                                                        return false;
+                                                    })
+                                                //})
+                                            }
+                                            this.currentCategory = categoryId;
+                                        }else{
+                                            return false;
+                                        }
+                                    },
+                                    changeQuestion: function (questionId, catgeoryId) {
+                                        if(req.user.questions[catgeoryId] == undefined){
+                                            if(this.changeCategory(catgeoryId)){
+                                                this.currentCategory = catgeoryId
+                                                this.currentQuestion = 0
+                                                return req.user.questions[catgeoryId][0]
+                                            }
+                                            return "Catégorie invalide"
+                                        }else{
+                                            if(this.isVaildCategory(catgeoryId) && this.isVaildQuestionId(questionId,catgeoryId)){
+                                                this.currentCategory = catgeoryId
+                                                this.currentQuestion = questionId
+                                                return req.user.questions[catgeoryId][questionId]
+                                            }
+                                            return "categoryId ou questionId Invalide"
+                                        }
+                                    }
+                                }
+
                                 console.log(req.user)
                                 return res.json({
                                     response: {
@@ -238,7 +393,8 @@ function checkObjectUserRegister(user) {
             let validValue = 0
 
             for (key in user) {
-                if(key == "lastName" || key == "firstName" || key == "email" || key == "birthdate" || "languages" || "formationName" || "formationCity" || "formationType"){
+
+                if(key == "lastName" || key == "firstName" || key == "email" || key == "birthdate" || key == "langages" || key == "formationName" || key == "formationCity" || key == "formationType"){
                     validKeyName += 1;
                 }else
                     check.errorValue.push(key)
