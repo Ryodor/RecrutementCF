@@ -7,6 +7,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 var cors = require('cors');
+const fileUpload = require('express-fileupload');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./api/users');
@@ -20,6 +21,9 @@ app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
 app.use(express.json());
+app.use(fileUpload({
+  limits: { fileSize: 50 * 1024 * 1024 },
+}));
 app.use(express.urlencoded({ extended: true }));
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
