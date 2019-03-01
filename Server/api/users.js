@@ -393,7 +393,6 @@ function checkObjectUserRegister(user) {
             let validValue = 0
 
             for (key in user) {
-
                 if(key == "lastName" || key == "firstName" || key == "email" || key == "birthdate" || key == "langages" || key == "formationName" || key == "formationCity" || key == "formationType"){
                     validKeyName += 1;
                 }else
