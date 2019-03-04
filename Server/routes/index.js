@@ -41,13 +41,17 @@ function dataTranformJSONToInsertQuestionInDB(json){
             let keys = Object.keys(questions)
             console.log("Key = ", keys)
             keys.forEach(key=>{
-                db.execute('SELECT * FROM `Question` WHERE jsonId = ?',[key],function (error,results,fields){
+                db.execute('SELECT  FROM `Question` WHERE jsonId = ?',[key],function (error,results,fields){
                     if (error) throw error;
                     if(results.length > 0){
 
                     }else{
                         let categoryId  = response.categories.filter(category=> category.categoryName == questions[key].category)[0].ID
-                        let langId = response.languages.filter(category=> category.languageName == questions[key].language)[0].ID
+                        let langId;
+                        if(questions[key].language != "")
+                            langId = response.languages.filter(category=> category.languageName == questions[key].language)[0].ID
+                        else
+                            langId = "NULL"
                         db.execute('INSERT INTO `Question` (questionText, categoryId, langId, difficulty, jsonId) VALUES (?,?,?,?,?)',[questions[key].question, categoryId, langId, questions[key].level, key],function (error,results,fields) {
                             if (error) throw error;
                             else{

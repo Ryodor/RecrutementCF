@@ -61,52 +61,53 @@ router.get('/start', function (req, res, next) {
 })
 
 router.post('/question', function (req, res, next) {
-    //if(req.user){
-    let response = req.body.response;
-    let nextQuestion = req.body.nextQuestion;
-    if (typeof response != "object")
-        response = JSON.parse(response);
+    if(req.user){
+        let response = req.body.response;
+        let nextQuestion = req.body.nextQuestion;
+        if (typeof response != "object")
+            response = JSON.parse(response);
 
-    let validResponse = checkValidResponse(response);
-    if (validResponse.isValid) {
+        let validResponse = checkValidResponse(response);
+        if (validResponse.isValid) {
 
-        //  Verifier que les choiceIds corésponde avec les réponse possible de la question (utilise rune fonction)
-        isValidChoiceForTheQuestion(response.choiceIds, response.questionId)
-            .then(results => {
-                db.execute('INSERT INTO `Answers` (userId,questionId,choiceIds,timer,correct) VALUES (?,?,?,?,?)', [req.user.id, response.questionId, response.choices, response.timer, results], function (error, results, fileds) {
-                    if (error) throw error;
-                    else {
-                        req.user.questions[response.categoriId][response.questionId]
-                    }
-                })
-            })
-
-        // récupérer la catégorieId , la questionId et langage Id, pour généraliser la route.
-        db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [nextQuestion.questionId], function (error, results, fields) {
-            if (error) throw error;
-            if (results.length > 0) {
-                let newQuestion = req.user.questions.changeQuestion(nextQuestion.categoriId,nextQuestion.questionId)
-                if(typeof newQuestion != "string"){
-                    return res.send({
-                        response: {
-                            sessionID: req.sessionID,
-                            question: newQuestion,
-                            choice: results
-                        }, error: ""
+            //  Verifier que les choiceIds corésponde avec les réponse possible de la question (utilise rune fonction)
+            isValidChoiceForTheQuestion(response.choiceIds, response.questionId)
+                .then(results => {
+                    db.execute('INSERT INTO `Answers` (userId,questionId,choiceIds,timer,correct) VALUES (?,?,?,?,?)', [req.user.id, response.questionId, response.choices, response.timer, results], function (error, results, fileds) {
+                        if (error) throw error;
+                        else {
+                            req.user.questions[response.categoriId][response.questionId].answer = results
+                        }
                     })
-                }
-                return res.json({response: "", error: newQuestion})
-            }else
-                return res.json({response: "", error: "Aucune choix n\'a était trouver."})
-        });
+                })
 
-    } else
-        return res.json({
-            response: "",
-            error: "Valeur ou/et syntax sont invalide " + validResponse.errorValue.toString()
-        })
-    //}else
-    //    return res.json({response:"",error:"Vous n'êtes pas connecté à un compte."})
+            // récupérer la catégorieId , la questionId et langage Id, pour généraliser la route.
+            let nextQuestionId =  req.user.questions[nextQuestion.nextCategoriId][nextQuestion.nextQuestionId].id
+            db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [nextQuestionId], function (error, results, fields) {
+                if (error) throw error;
+                if (results.length > 0) {
+                    let newQuestion = req.user.questions.changeQuestion(nextQuestion.categoriId,nextQuestion.questionId)
+                    if(typeof newQuestion != "string"){
+                        return res.send({
+                            response: {
+                                sessionID: req.sessionID,
+                                question: newQuestion,
+                                choice: results
+                            }, error: ""
+                        })
+                    }
+                    return res.json({response: "", error: newQuestion})
+                }else
+                    return res.json({response: "", error: "Aucune choix n\'a était trouver."})
+            });
+
+        } else
+            return res.json({
+                response: "",
+                error: "Valeur ou/et syntax sont invalide " + validResponse.errorValue.toString()
+            })
+    }else
+        return res.json({response:"",error:"Vous n'êtes pas connecté à un compte."})
 })
 
 router.get('/question/:id', function (req, res, next) {
