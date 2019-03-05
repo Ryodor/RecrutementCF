@@ -2,10 +2,30 @@
 <html>
   <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="/assets/js/bootstrap.min.js"></script>
+    <script src="/assets/jquery.min.js"></script>
+    <script src="/javascripts/login.js"></script>
+    <link rel="stylesheet" href="/stylesheets/login.css"/>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
+  <div class="fadeIn">
+    <img src="/images/logoCF.jpg" id="icon" alt="User Icon" />
+  </div>
+  <section class="jumbotron text-center" style="background-color: white">
+    <div class="container">
+      <h1 class="jumbotron-heading">Bienvenue sur le site de PreAdmission</h1>
+      <p class="lead text-muted">Pour continuer sur le site veullier  vous connecter ou vous enregistre.</p>
+      <p>
+        <a href="/login" class="btn btn-primary my-2">Connexion</a>
+        <a href="/register" class="btn btn-secondary my-2">Enregistrement</a>
+      </p>
+    </div>
+  </section>
   </body>
 </html>

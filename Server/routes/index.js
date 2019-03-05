@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+let passport = require("passport")
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -8,6 +9,24 @@ router.get('/', function(req, res, next) {
 
 router.get('/upload',function (req, res, next) {
     res.render('upload',{ title: 'Upload File' });
+})
+
+
+router.get('/login',function (req, res, next) {
+    res.render('login',{ title: 'Upload File' });
+})
+
+router.get('/register',function (req, res, next) {
+    res.render('register',{ title: 'Upload File' });
+})
+
+router.get('/explanationScreen', loggedIn,function (req, res, next) {
+    res.render('explanationScreen',{ title: 'Upload File' });
+})
+
+
+router.get('/qcm', loggedIn,function (req, res, next) {
+    res.render('qcm',{ title: 'Upload File' });
 })
 
 router.post('/upload', function(req, res, next) {
@@ -30,6 +49,14 @@ router.post('/upload', function(req, res, next) {
     res.send('Fichier uploader sur le serveur.');
 });
 
+function loggedIn(req, res, next) {
+    if (req.session.user) {
+        next();
+    } else {
+        res.redirect("/login",)
+    }
+}
+
 /**
  *
  * @param json
@@ -41,23 +68,47 @@ function dataTranformJSONToInsertQuestionInDB(json){
             let keys = Object.keys(questions)
             console.log("Key = ", keys)
             keys.forEach(key=>{
-                db.execute('SELECT  FROM `Question` WHERE jsonId = ?',[key],function (error,results,fields){
+                db.execute('SELECT jsonId FROM `Question` WHERE jsonId = ?',[key],function (error,results,fields){
                     if (error) throw error;
                     if(results.length > 0){
 
                     }else{
                         let categoryId  = response.categories.filter(category=> category.categoryName == questions[key].category)[0].ID
-                        let langId;
-                        if(questions[key].language != "")
+                        let langId
+                        if(questions[key].language != ""){
                             langId = response.languages.filter(category=> category.languageName == questions[key].language)[0].ID
+                            db.execute('INSERT INTO `Question` (questionText, categoryId, langId, difficulty, jsonId) VALUES (?,?,?,?,?)',[questions[key].question, categoryId, langId, questions[key].level, key],function (error,results,fields) {
+                                if (error) throw error;
+                                else{
+                                    questions[key].answers.forEach(choice=>{
+                                        console.log("=========== [DEBUG choice json forEach ] ===========")
+                                        console.log("choice : ",choice)
+                                        db.execute('INSERT INTO `Choice` (textResponse, questionId, rightAnswer) VALUES (?,?,?)',[choice.answer, results.insertId, choice.right],function (error,results,fields) {
+                                            if (error) throw error;
+                                            else{
+                                                console.log("insertId ",results)
+                                            }
+                                        })
+                                    })
+                                }
+                            })
+                        }
                         else
-                            langId = "NULL"
-                        db.execute('INSERT INTO `Question` (questionText, categoryId, langId, difficulty, jsonId) VALUES (?,?,?,?,?)',[questions[key].question, categoryId, langId, questions[key].level, key],function (error,results,fields) {
-                            if (error) throw error;
-                            else{
-                                dataTranformJSONToInsertChoicesInDB(questions[key].answers, results.insertId);
-                            }
-                        })
+                            db.execute('INSERT INTO `Question` (questionText, categoryId, langId, difficulty, jsonId) VALUES (?,?,?,?,?)',[questions[key].question, categoryId, null,questions[key].level, key],function (error,results,fields) {
+                                if (error) throw error;
+                                else{
+                                    questions[key].answers.forEach(choice=>{
+                                        console.log("=========== [DEBUG choice json forEach ] ===========")
+                                        console.log("choice : ",choice)
+                                        db.execute('INSERT INTO `Choice` (textResponse, questionId, rightAnswer) VALUES (?,?,?)',[choice.answer, results.insertId, choice.right],function (error,results,fields) {
+                                            if (error) throw error;
+                                            else{
+                                                console.log("insertId ",results)
+                                            }
+                                        })
+                                    })
+                                }
+                            })
                     }
                 })
             })
