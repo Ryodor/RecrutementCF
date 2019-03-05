@@ -11,9 +11,21 @@ router.get('/', function (req, res, next) {
     });
 });
 
+
+router.get('/guard', function (req, res, next) {
+    console.log("req.session ",req.sessionID)
+    console.log("req.session ",req.session)
+    console.log("req.session.user ",req.session.user)
+    console.log("req.user ",req.user)
+    if(req.user || req.session.user)
+        return res.json({response: req.session.user, error: ""})
+    else
+        return res.json({response: "", error: "Vous n'êtes pas connecter"})
+});
+
 /* POST users login listing. */
 router.post('/login', function (req, res, next) {
-    if (!req.user) {
+    if (!req.session.user) {
         console.log(req.body)
         let user = req.body.user
 
@@ -23,96 +35,48 @@ router.post('/login', function (req, res, next) {
         let checkLogin = checkObjectUserLogin(user)
         console.log(checkLogin.errorValue)
         if (checkLogin.isValid) {
-            db.execute('SELECT lastName, firstName, ID, userPassword FROM `Users` WHERE `email`= ? ', [user.email], function (error, results, fields) {
+            db.execute('SELECT lastName, firstName, ID, userPassword, email FROM `Users` WHERE `email`= ? ', [user.email], function (error, results, fields) {
                 if (error) throw error;
 
                 if (results.length > 0) {
-                    if (validPassword(user.password, results[0].userPassword)) {
-                        req.sessions.user = {
-                            id: results[0].ID,
-                            firstName: results[0].firstName,
-                            lastName: results[0].lastName,
-                            sessionID: req.sessionID,
-                            checkHash: bcrypt.hashSync(this.id.toString() + this.firstName + this.lastName + this.sessionID.toString(), bcrypt.genSaltSync(1), null)
-                        }
-                        req.user.questions = []
-                        req.user.questions.navigator = {
-                            currentCategory: 0,
-                            currentQuestion: 0,
-                            qcmTimer:"00:30:00",
-                            allCategoriesExists: Categories,
-                            isVaildCategory: function(checkValue){
-                                if(/^[0-9]+^$/.test(catgeory)){
-                                    this.allCategoriesExists.forEach(category=>{
-                                        if(category.id == checkValue)
-                                            return true
-                                        else
-                                            return false
-                                    })
-                                }else if(/^[a-zA-Z]+^$/.test(catgeory)){
-                                    this.allCategoriesExists.forEach(category=>{
-                                        if(category.categoryName == checkValue)
-                                            return true
-                                        else
-                                            return false
-                                    })
-                                }
-                                return false
-                            },
-                            isVaildQuestionId: function(questionId, categoryId){
-                                if(req.user.questions[categoryId][questionId] != undefined){
-                                    return true
-                                }
-                                return false
-                            },
-                            changeCategory: function (categoryId) {
-                                if(this.isVaildCategory){
-                                    let iterator = req.user.questions.keys;
-                                    let findKey = false;
-                                    for(key of iterator){
-                                        if(key == categoryId){
-                                            findKey = true;
-                                            break;
-                                        }
-                                    }
-                                    if(!findKey){
-                                        //return new Promise((resolve, reject) => {
-                                        generateQuestionsByCategory(categoryId, user.langages)
-                                            .then(result=>{
-                                                req.user.questions[categoryId] = result
-                                                return true;
-                                            })
-                                            .catch(error=>{
-                                                console.error(error)
-                                                return false;
-                                            })
-                                        //})
-                                    }
-                                    this.currentCategory = categoryId;
-                                }else{
-                                    return false;
-                                }
-                            },
-                            changeQuestion: function (questionId, catgeoryId) {
-                                if(req.user.questions[catgeoryId] == undefined){
-                                    if(this.changeCategory(catgeoryId)){
-                                        this.currentCategory = catgeoryId
-                                        this.currentQuestion = 0
-                                        return req.user.questions[catgeoryId][0]
-                                    }
-                                    return "Catégorie invalide"
-                                }else{
-                                    if(this.isVaildCategory(catgeoryId) && this.isVaildQuestionId(questionId,catgeoryId)){
-                                        this.currentCategory = catgeoryId
-                                        this.currentQuestion = questionId
-                                        return req.user.questions[catgeoryId][questionId]
-                                    }
-                                    return "categoryId ou questionId Invalide"
-                                }
-                            }
-                        }
 
-                        return res.json({response: req.user, error: ""})
+                    if (validPassword(user.password, results[0].userPassword)) {
+                        getUserLanguages(results[0].ID)
+                            .then(languages=>{
+                                console.log("languages ",languages)
+                                req.user = {
+                                    id: results[0].ID,
+                                    firstName: results[0].firstName,
+                                    lastName: results[0].lastName,
+                                    sessionID: req.sessionID,
+                                    languages: languages,
+                                    checkHash: bcrypt.hashSync(results[0].ID + results[0].firstName + results[0].lastName + req.sessionID, bcrypt.genSaltSync(1), null)
+                                }
+                                db.execute('SELECT * FROM `Categories` ', function (error, results, fields) {
+                                    if (error) throw error;
+                                    else if (results.length > 0) {
+                                        let Categories = results;
+                                        console.log(req.user)
+                                    }
+                                })
+                                req.user.login = results[0].email
+                                req.session.user = req.user
+                                req.session.user.questions = []
+                                req.session.user.test = function(){
+                                    console.log("test")
+                                }
+                                req.session.user.navigator = {
+                                    currentCategory: 1,
+                                    currentQuestion: 0,
+                                    qcmTimer:"00:30:00",
+                                }
+                                console.log("req.session ",req.session)
+                                console.log("req.sessionId ",req.sessionID)
+                                //res.set('Set-Cookie', req.session.cookie);
+                                //res.cookie(req.session.cookie)
+                                res.json({response: req.user, error: ""})
+                            })
+                            .catch()
                     } else
                         return res.json({response: "", error: "Invalid Password"})
                 } else
@@ -124,12 +88,19 @@ router.post('/login', function (req, res, next) {
                 error: "Valeur ou/et syntax, envoyer sont invalide  " + checkLogin.errorValue.toString()
             })
     } else
-        res.redirect("/profile")
+        res.json({
+            response: "",
+            error: "Vous êtes déjà connecter"
+        })
+    console.log("req.sessionId ",req.sessionID)
+    console.log("session cookie",req.session.cookie)
+    console.log("req.session.user", req.session.user)
+    console.log("req.user", req.user)
 });
 
 /* POST users register listing. */
 router.post('/register', function (req, res, next) {
-    if (!req.user) {
+    if (!req.session.user) {
         let user = req.body.user
 
         if (typeof req.body != 'object')
@@ -172,86 +143,22 @@ router.post('/register', function (req, res, next) {
                                     sessionID: req.sessionID,
                                     languages: user.languages
                                 }
-                                req.user.checkHash = bcrypt.hashSync(req.user.id.toString() + req.user.firstName + req.user.lastName + req.user.sessionID.toString, bcrypt.genSaltSync(1), null)
+                                req.user.checkHash = bcrypt.hashSync(req.user.id + req.user.firstName + req.user.lastName + req.user.sessionID, bcrypt.genSaltSync(1), null)
 
-                                req.user.questions = []
-                                req.user.questions.navigator = {
-                                    currentCategory: 0,
-                                    currentQuestion: 0,
-                                    qcmTimer:"00:30:00",
-                                    allCategoriesExists: Categories,
-                                    isVaildCategory: function(checkValue){
-                                        if(/^[0-9]+^$/.test(catgeory)){
-                                            this.allCategoriesExists.forEach(category=>{
-                                                if(category.id == checkValue)
-                                                    return true
-                                                else
-                                                    return false
-                                            })
-                                        }else if(/^[a-zA-Z]+^$/.test(catgeory)){
-                                            this.allCategoriesExists.forEach(category=>{
-                                                if(category.categoryName == checkValue)
-                                                    return true
-                                                else
-                                                    return false
-                                            })
-                                        }
-                                        return false
-                                    },
-                                    isVaildQuestionId: function(questionId, categoryId){
-                                        if(req.user.questions[categoryId][questionId] != undefined){
-                                            return true
-                                        }
-                                        return false
-                                    },
-                                    changeCategory: function (categoryId) {
-                                        if(this.isVaildCategory){
-                                            let iterator = req.user.questions.keys;
-                                            let findKey = false;
-                                            for(key of iterator){
-                                                if(key == categoryId){
-                                                    findKey = true;
-                                                    break;
-                                                }
-                                            }
-                                            if(!findKey){
-                                                //return new Promise((resolve, reject) => {
-                                                generateQuestionsByCategory(categoryId, user.langages)
-                                                    .then(result=>{
-                                                        req.user.questions[categoryId] = result
-                                                        return true;
-                                                    })
-                                                    .catch(error=>{
-                                                        console.error(error)
-                                                        return false;
-                                                    })
-                                                //})
-                                            }
-                                            this.currentCategory = categoryId;
-                                        }else{
-                                            return false;
-                                        }
-                                    },
-                                    changeQuestion: function (questionId, catgeoryId) {
-                                        if(req.user.questions[catgeoryId] == undefined){
-                                            if(this.changeCategory(catgeoryId)){
-                                                this.currentCategory = catgeoryId
-                                                this.currentQuestion = 0
-                                                return req.user.questions[catgeoryId][0]
-                                            }
-                                            return "Catégorie invalide"
-                                        }else{
-                                            if(this.isVaildCategory(catgeoryId) && this.isVaildQuestionId(questionId,catgeoryId)){
-                                                this.currentCategory = catgeoryId
-                                                this.currentQuestion = questionId
-                                                return req.user.questions[catgeoryId][questionId]
-                                            }
-                                            return "categoryId ou questionId Invalide"
+                                db.execute('SELECT * FROM `Categories` ', function (error, results, fields) {
+                                    if (error) throw error;
+                                    else if (results.length > 0) {
+                                        let Categories = results;
+                                        req.session.user.questions = []
+                                        req.session.user.navigator = {
+                                            currentCategory: 0,
+                                            currentQuestion: 0,
+                                            qcmTimer:"00:30:00"
                                         }
                                     }
-                                }
-
-                                console.log(req.user)
+                                })
+                                req.session.user = req.user;
+                                console.log(req.session.user)
                                 return res.json({
                                     response: {
                                         id: results.insertId,
@@ -274,7 +181,11 @@ router.post('/register', function (req, res, next) {
                 response: "",
                 error: "Valeur ou/et syntax sont invalide " + checkRegister.errorValue.toString()
             })
-    }
+    }else
+        res.json({
+            response: "",
+            error: "Vous êtes déjà connecter"
+        })
 });
 
 router.get('/lang', function (req, res, next) {
@@ -362,6 +273,22 @@ function loggedIn(req, res, next) {
     }
 }
 
+function getUserLanguages (userId){
+    return new Promise((resolve, reject) => {
+        db.execute('SELECT langId FROM `UsersLangs` WHERE userId = ?', [userId], function (error, results, fields) {
+            if (error) throw error;
+            if(results.length > 0){
+                return resolve(results.map(languages=> languages.langId))
+            }else{
+                reject({
+                    response: "",
+                    error: "Erreur, aucun langage par rapport a l'utilisateur trouvé."
+                })
+            }
+        })
+    })
+}
+
 function insertLangageUsers(userId, langIds) {
     if (langIds.length > 0) {
         langIds.forEach(langId => {
@@ -393,7 +320,7 @@ function checkObjectUserRegister(user) {
             let validValue = 0
 
             for (key in user) {
-                if(key == "lastName" || key == "firstName" || key == "email" || key == "birthdate" || key == "langages" || key == "formationName" || key == "formationCity" || key == "formationType"){
+                if(key == "lastName" || key == "firstName" || key == "email" || key == "birthdate" || key == "languages" || key == "formationName" || key == "formationCity" || key == "formationType"){
                     validKeyName += 1;
                 }else
                     check.errorValue.push(key)
@@ -419,57 +346,57 @@ function checkObjectUserRegister(user) {
                     else
                         check.errorValue.push(user[key])
                 }
-/*                if (key == "formationName") {
-                    db.execute('SELECT * FROM `Formations`', function (error, results, fields) {
-                        if (error) throw error;
-                        if (results.length > 0) {
-                            let checkElementValue = validValue;
-                            results.forEach(formationName => {
-                                if (user[key] == formationName) {
-                                    validValue += 1
-                                }
-                            })
-                            if (checkElementValue+1 == validValue) {
+                /*                if (key == "formationName") {
+                                    db.execute('SELECT * FROM `Formations`', function (error, results, fields) {
+                                        if (error) throw error;
+                                        if (results.length > 0) {
+                                            let checkElementValue = validValue;
+                                            results.forEach(formationName => {
+                                                if (user[key] == formationName) {
+                                                    validValue += 1
+                                                }
+                                            })
+                                            if (checkElementValue+1 == validValue) {
 
-                            } else
-                                check.errorValue.push(user[key])
-                        }
-                    })
-                }
-                if (key == "formationCity") {
-                    db.execute('SELECT * FROM `City`', function (error, results, fields) {
-                        if (error) throw error;
-                        if (results.length > 0) {
-                            let checkElementValue = validValue;
-                            results.forEach(formationName => {
-                                if (user[key] == formationName) {
-                                    validValue += 1
+                                            } else
+                                                check.errorValue.push(user[key])
+                                        }
+                                    })
                                 }
-                            })
-                            if (checkElementValue+1 == validValue) {
+                                if (key == "formationCity") {
+                                    db.execute('SELECT * FROM `City`', function (error, results, fields) {
+                                        if (error) throw error;
+                                        if (results.length > 0) {
+                                            let checkElementValue = validValue;
+                                            results.forEach(formationName => {
+                                                if (user[key] == formationName) {
+                                                    validValue += 1
+                                                }
+                                            })
+                                            if (checkElementValue+1 == validValue) {
 
-                            } else
-                                check.errorValue.push(user[key])
-                        }
-                    })
-                }
-                if (key == "formationType") {
-                    db.execute('SELECT * FROM `FormationTypes`', function (error, results, fields) {
-                        if (error) throw error;
-                        if (results.length > 0) {
-                            let checkElementValue = validValue;
-                            results.forEach(formationName => {
-                                if (user[key] == formationName) {
-                                    validValue += 1
+                                            } else
+                                                check.errorValue.push(user[key])
+                                        }
+                                    })
                                 }
-                            })
-                            if (checkElementValue+1 == validValue) {
+                                if (key == "formationType") {
+                                    db.execute('SELECT * FROM `FormationTypes`', function (error, results, fields) {
+                                        if (error) throw error;
+                                        if (results.length > 0) {
+                                            let checkElementValue = validValue;
+                                            results.forEach(formationName => {
+                                                if (user[key] == formationName) {
+                                                    validValue += 1
+                                                }
+                                            })
+                                            if (checkElementValue+1 == validValue) {
 
-                            } else
-                                check.errorValue.push(user[key])
-                        }
-                    })
-                }*/
+                                            } else
+                                                check.errorValue.push(user[key])
+                                        }
+                                    })
+                                }*/
             }
             console.log("[DEBUG] validKeyName "+validKeyName);
             console.log("[DEBUG] validValue "+validValue);

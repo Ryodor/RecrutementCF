@@ -28,16 +28,22 @@ app.use(express.urlencoded({ extended: true }));
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
-  secret: 'blackboardAgileEduScrumCodingFactoryPreAdmissionEnv',
+  secret: 'AgileEduScrumCodingFactoryPreAdmissionEnv',
   resave: false,
   saveUninitialized: true,
-  cookie: { maxAge: 60000 }
+  cookie: { maxAge: 24*60*60*1000, httpOnly: false }
 }));
 // parse application/json
 app.use(bodyParser.json());
 app.use(cors());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/assets', [
+  express.static(__dirname + '/node_modules/jquery/dist/'),
+  express.static(__dirname + '/node_modules/bootstrap/dist/'),
+  express.static(__dirname + '/node_modules/popper.js/dist/'),
+  express.static(__dirname + '/node_modules/tooltip.js/dist/')
+]);
 
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
