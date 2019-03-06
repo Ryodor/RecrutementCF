@@ -5,7 +5,7 @@ $(document).ready(function () {
         var settings = {
             "async": true,
             "crossDomain": true,
-            "url": "http://localhost:3000/api/users/login",
+            "url": "http://"+window.location.host+"/api/users/login",
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json",

@@ -24,7 +24,7 @@ $(document).ready(function () {
         var settings = {
             "async": true,
             "crossDomain": true,
-            "url": "http://localhost:3000/api/users/register",
+            "url": "http://"+window.location.host+"/api/users/register",
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json",
@@ -126,7 +126,7 @@ fillFormationSelects = function(){
     var settings = {
         "async": true,
         "crossDomain": true,
-        "url": "http://localhost:3000/api/users/formations",
+        "url": "http://"+window.location.host+"/api/users/formations",
         "method": "GET",
         "headers": {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -171,7 +171,7 @@ getLanguages = function(){
     var settings = {
         "async": true,
         "crossDomain": true,
-        "url": "http://localhost:3000/api/users/lang",
+        "url": "http://"+window.location.host+"/api/users/lang",
         "method": "GET",
         "headers": {
             "Content-Type": "application/x-www-form-urlencoded",
