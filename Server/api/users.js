@@ -143,22 +143,16 @@ router.post('/register', function (req, res, next) {
                                     lastName: user.lastName,
                                     sessionID: req.sessionID,
                                     languages: user.languages,
-                                    finish: false
+                                    finish: false,
+                                    questions: [],
+                                    navigator : {
+                                        currentCategory: 0,
+                                        currentQuestion: 0,
+                                        qcmTimer:"00:30:00"
+                                    }
                                 }
                                 req.user.checkHash = bcrypt.hashSync(req.user.id + req.user.firstName + req.user.lastName + req.user.sessionID, bcrypt.genSaltSync(1), null)
 
-                                db.execute('SELECT * FROM `Categories` ', function (error, results, fields) {
-                                    if (error) throw error;
-                                    else if (results.length > 0) {
-                                        let Categories = results;
-                                        req.session.user.questions = []
-                                        req.session.user.navigator = {
-                                            currentCategory: 0,
-                                            currentQuestion: 0,
-                                            qcmTimer:"00:30:00"
-                                        }
-                                    }
-                                })
                                 req.session.user = req.user;
                                 console.log(req.session.user)
                                 return res.json({
