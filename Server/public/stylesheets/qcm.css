@@ -380,3 +380,8 @@ label .glyphicon {
     display: flex;
     justify-content: space-around;
 }
+#icon {
+    display: block;
+    margin: auto;
+    width:80%;
+}

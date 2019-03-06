@@ -35,7 +35,7 @@ router.post('/login', function (req, res, next) {
         let checkLogin = checkObjectUserLogin(user)
         console.log(checkLogin.errorValue)
         if (checkLogin.isValid) {
-            db.execute('SELECT lastName, firstName, ID, userPassword, email FROM `Users` WHERE `email`= ? ', [user.email], function (error, results, fields) {
+            db.execute('SELECT * FROM `Users` WHERE `email`= ? ', [user.email], function (error, results, fields) {
                 if (error) throw error;
 
                 if (results.length > 0) {
@@ -50,6 +50,7 @@ router.post('/login', function (req, res, next) {
                                     lastName: results[0].lastName,
                                     sessionID: req.sessionID,
                                     languages: languages,
+                                    finish: results[0].finish == 0 ? false : true,
                                     checkHash: bcrypt.hashSync(results[0].ID + results[0].firstName + results[0].lastName + req.sessionID, bcrypt.genSaltSync(1), null)
                                 }
                                 db.execute('SELECT * FROM `Categories` ', function (error, results, fields) {
@@ -141,7 +142,8 @@ router.post('/register', function (req, res, next) {
                                     firstName: user.firstName,
                                     lastName: user.lastName,
                                     sessionID: req.sessionID,
-                                    languages: user.languages
+                                    languages: user.languages,
+                                    finish: false
                                 }
                                 req.user.checkHash = bcrypt.hashSync(req.user.id + req.user.firstName + req.user.lastName + req.user.sessionID, bcrypt.genSaltSync(1), null)
 
@@ -307,6 +309,113 @@ function validPassword(password, passwordHash) {
     return bcrypt.compareSync(password, passwordHash);
 }
 
+function restoreDataQcm(object, userId){
+    return new Promise((resolve, reject) => {
+        db.execute('SELECT * FROM `Answers` WHERE userId = ?', [userId], function (error, answers, fields) {
+            if (error) throw error;
+            if (answers.length > 0) {
+                answers.forEach(answer=>{
+                    db.execute('SELECT * FROM `Question` WHERE ID = ?', [answer.questionId], function (error, questions, fields) {
+                        if (error) throw error;
+                        if (questions.length > 0) {
+                            questions.forEach(question=>{
+                                if(answers.questionId == questions.ID){
+                                    questions.answer =  answer
+                                    object.questions[questions.categoryId].push(question)
+                                }
+                            })
+                        }
+                    })
+                })
+                object.start = true
+                object.navigator.currentCategory = object.questions.length
+                object.navigator.currentQuestion = object.question[object.navigator.currentCategory][object.question[object.navigator.currentCategory].length]
+                if(object.navigator.currentQuestion < 5){
+                    let retry = 5;
+                    do{
+                        if(retry == 0){
+                            break;
+                        }
+                        generateQuestionsByCategory(object.navigator.currentCategory, object.languages, object.questions[object.navigator.currentCategory].length-5)
+                            .then(generateQuestion=>{
+                                generateQuestion.forEach(newQuestion=>{
+                                    object.questions[object.navigator.currentCategory].forEach(question=>{
+                                        if(newQuestion.ID != question.ID){
+                                            object.questions[object.navigator.currentCategory].push(newQuestion)
+                                        }
+                                    })
+                                })
+                            })
+                            .catch(error=>{
+                                retry -= 1
+                            })
+                    }while(object.questions[object.navigator.currentCategory].length == 5)
+                    object.navigator.currentQuestion = object.navigator.currentQuestion+1
+                    resolve(true)
+                }else if(object.navigator.currentQuestion == 5 && object.navigator.currentCategory == 6){
+                    object.finish = true
+                    return resolve(true)
+                }
+            }else{
+                return resolve(false)
+            }
+        })
+    })
+}
+
+function generateQuestionsByCategory(catgeroyId, langIds, nbQuestionGenerate) {
+    let queryLangId = "";
+    setImmediate(()=>{
+        db.execute('SELECT categoryName FROM `Categories` WHERE ID = ?', [catgeroyId], function (error, results, fields) {
+            if (error) throw error;
+
+            if (results.length > 0) {
+                console.log("Categorie ",results[0])
+                if (results[0].categoryName == "Syntaxe" || results[0].categoryName == "Algo") {
+                    if (langIds.length > 1) {
+                        queryLangId += "("
+                        langIds.forEach((lang, index) => {
+                            if (index == langIds.length - 1)
+                                queryLangId += "langId = " + lang
+                            else
+                                queryLangId += "langId = " + lang + " OR "
+                        })
+                        queryLangId += ")"
+                    } else
+                        queryLangId = langIds[0]
+                }
+            }
+        })
+    })
+    let executeQuery = ""
+    console.log("queryLangId ",queryLangId)
+    console.log("queryLangId condition ", queryLangId != "")
+    return new Promise((resolve, reject) => {
+
+        if(queryLangId != ""){
+            db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ?  AND ' + queryLangId + ' ORDER BY RAND(), langId LIMIT '+nbQuestionGenerate,[parseInt(catgeroyId)], function (error, results, fields) {
+                if (error)throw error;
+
+                if (results.length > 0) {
+                    console.log("results ", results)
+                    return resolve(results)
+                } else
+                    return reject({response: "", error: "Aucune question n\'a était trouver."})
+            })
+        } else{
+            db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT '+nbQuestionGenerate,[parseInt(catgeroyId)], function (error, results, fields) {
+                if (error)throw error;
+
+                if (results.length > 0) {
+                    console.log("results ", results)
+                    return resolve(results)
+                } else
+                    return reject({response: "", error: "Aucune question n\'a était trouver."})
+            })
+        }
+    })
+}
+
 function checkObjectUserRegister(user) {
     console.log("[@debug] user ",user)
     let check = {
@@ -346,6 +455,8 @@ function checkObjectUserRegister(user) {
                     else
                         check.errorValue.push(user[key])
                 }
+                // TODO : dans le futur pourra verifier si les valeur sont bonne
+
                 /*                if (key == "formationName") {
                                     db.execute('SELECT * FROM `Formations`', function (error, results, fields) {
                                         if (error) throw error;

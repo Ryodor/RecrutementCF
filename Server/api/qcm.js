@@ -34,73 +34,85 @@ router.get('/start', function (req, res, next) {
                 Langages = results;
             }
         })
+        if(!req.session.user.finish){
 
-        if (!req.session.user.start) {
-            console.log("if not start")
-            db.execute('SELECT langId FROM `UsersLangs` WHERE userId = ?', [req.session.user.id], function (error, languagesUsers, fields) {
-                if (error) throw error;
-                else if (languagesUsers.length > 0) {
-                    console.log(languagesUsers)
-                    generateQuestionsByCategory(1, languagesUsers.map(element => element.langId))
-                        .then(question => {
-                            console.log("[DEBUG] question1 ", question)
-                            req.session.user.start = true
-                            req.session.user.questions[1] = question
-                            req.session.user.navigator.allCategoriesExists = Categories
+            if (!req.session.user.start) {
+                console.log("if not start")
+                db.execute('SELECT langId FROM `UsersLangs` WHERE userId = ?', [req.session.user.id], function (error, languagesUsers, fields) {
+                    if (error) throw error;
+                    else if (languagesUsers.length > 0) {
+                        console.log(languagesUsers)
+                        console.log("user ",req.session.user)
+                        generateQuestionsByCategory(req.session.user.navigator.currentCategory, languagesUsers.map(element => element.langId))
+                            .then(question => {
+                                console.log("[DEBUG] question1 ", question)
+                                req.session.user.start = true
+                                req.session.user.questions[1] = question
+                                req.session.user.startTimestamp = Date.now()
+                                req.session.user.currentTimestamp = Date.now()
+                                req.session.user.navigator.allCategoriesExists = Categories
 
-                            setImmediate(() => {
-                                db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [question[0].ID], function (error, results, fields) {
-                                    if (error) throw error;
+                                setImmediate(() => {
+                                    db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [question[0].ID], function (error, results, fields) {
+                                        if (error) throw error;
 
-                                    if (results.length > 0) {
-                                        return res.send({
-                                            response: {
-                                                sessionID: req.sessionID,
-                                                categories: Categories,
-                                                langages: Langages,
-                                                question: question[0],
-                                                questionId: 0,
-                                                choice: results
-                                            }, error: ""
-                                        });
-                                    } else
-                                        return res.json({response: "", error: "Aucune choix n\'a était trouver."})
+                                        if (results.length > 0) {
+                                            return res.send({
+                                                response: {
+                                                    sessionID: req.sessionID,
+                                                    categories: Categories,
+                                                    langages: Langages,
+                                                    question: question[0],
+                                                    questionId: 0,
+                                                    choice: results,
+                                                    tiemstamp: req.session.user.currentTimestamp
+                                                }, error: ""
+                                            });
+                                        } else
+                                            return res.json({response: "", error: "Aucune choix n\'a était trouver."})
+                                    })
                                 })
                             })
-                        })
-                        .catch(error => {
-                            return res.json({response: "", error: "Aucune question n\'a était trouver."})
-                        })
-                } else {
-                    return res.json({
-                        response: "", error: "Une erreur et survenue a la récupération des lang du candidat"
-                    });
-                }
-            })
-        } else {
-            console.log("if start")
-            let question = req.session.user.questions[req.session.user.navigator.currentCategory][req.session.user.navigator.currentQuestion]
-            console.log(question)
-            db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [question.ID], function (error, results, fields) {
-                if (error) throw error;
+                            .catch(error => {
+                                return res.json({response: "", error: "Aucune question n\'a était trouver."})
+                            })
+                    } else {
+                        return res.json({
+                            response: "", error: "Une erreur et survenue a la récupération des lang du candidat"
+                        });
+                    }
+                })
+            } else {
+                console.log("if start")
+                let question = req.session.user.questions[req.session.user.navigator.currentCategory][req.session.user.navigator.currentQuestion]
+                console.log(question)
+                db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [question.ID], function (error, results, fields) {
+                    if (error) throw error;
 
-                if (results.length > 0) {
-                    return res.json({
-                        response: {
-                            sessionID: req.sessionID,
-                            categories: Categories,
-                            langages: Langages,
-                            question: question,
-                            questionId: req.session.user.navigator.currentQuestion,
-                            choice: results
-                        }, error: ""
-                    });
-                } else {
-                    return res.json({
-                        response: "",
-                        error: "Error pas de question trouver dans la session user"
-                    })
-                }
+                    if (results.length > 0) {
+                        return res.json({
+                            response: {
+                                sessionID: req.sessionID,
+                                categories: Categories,
+                                langages: Langages,
+                                question: question,
+                                questionId: req.session.user.navigator.currentQuestion,
+                                choice: results,
+                                tiemstamp: req.session.user.currentTimestamp
+                            }, error: ""
+                        });
+                    } else {
+                        return res.json({
+                            response: "",
+                            error: "Error pas de question trouver dans la session user"
+                        })
+                    }
+                })
+            }
+        }else{
+            return res.json({
+                response: {sessionId: req.sessionID,finish : true},
+                error: ""
             })
         }
     } else
@@ -108,60 +120,132 @@ router.get('/start', function (req, res, next) {
 
 })
 
+router.post('/finish', function (req, res, next) {
+    if (req.session.user) {
+        if(!req.session.user.finish && req.session.user.start){
+            req.body.timer
+            if( req.body.timer.minute == 0 &&  req.body.timer.second == 0){
+                req.session.user.finish == true
+                db.execute('UPDATE `Users` SET `finish` = ?, `timer` = ? WHERE ID = ?' ,[req.session.user.finish, "00:00:00",req.session.user.id], function (error, results, fields) {
+                    if (error) throw error;
+                    else
+                        console.log("in update")
+                })
+                return res.json({
+                    response: {
+                        sessionID: req.sessionID,
+                        finish: true,
+                    }, error: ""
+                })
+            }else{
+                let checkQuestion = req.body.response.question;
+                let lastQuestionId = session.user.question[req.session.user.navigator.currentCategory].length
+                if(checkQuestion.categoryId == req.session.user.navigator.currentCategory && req.session.user.question[req.session.user.navigator.currentCategory][lastQuestionId]){
+                    req.session.user.finish == true
+                    req.session.user.currentTimestamp = Date.now()
+                    saveTimerUser(req.session.user)
+                    db.execute('UPDATE `Users` SET `finish` = ? WHERE ID = ?' ,[req.session.user.finish,req.session.user.id], function (error, results, fields) {
+                        if (error) throw error;
+                        else
+                            console.log("in update")
+                    })
+                    return res.json({
+                        response: {
+                            sessionID: req.sessionID,
+                            finish: true,
+                        }, error: ""
+                    })
+                }
+            }
+        }
+    }
+})
+
 router.post('/question', function (req, res, next) {
     if (req.session.user) {
-        let response = req.body.response;
-        let nextQuestion = req.body.nextQuestion;
-        if (typeof response != "object")
-            response = JSON.parse(response);
+        if(req.session.user.start == true && req.session.user.finish ==false){
+            let response = req.body.response;
+            let nextQuestion = req.body.nextQuestion;
+            if (typeof response != "object")
+                response = JSON.parse(response);
 
-        let validResponse = checkValidResponse(response);
-        if (validResponse.isValid) {
-            console.log("================= DEBUG Response question ======================")
-            console.log(req.body)
-            //  Verifier que les choiceIds corésponde avec les réponse possible de la question (utilise rune fonction)
-            let question = req.session.user.questions[req.session.user.navigator.currentCategory][req.session.user.navigator.currentQuestion]
-            isValidChoiceForTheQuestion(response.choiceIds, question.ID)
-                .then(dataValidChoice => {
-                    db.execute('INSERT INTO `Answers` (userId,questionId,choiceIds,timer,correct) VALUES (?,?,?,?,?)', [req.session.user.id, question.ID, response.choiceIds, '2019-03-05 15:30:00', dataValidChoice], function (error, results, fileds) {
-                        if (error) throw error;
-                        else {
-                            console.log("response ", response)
-                            console.log("user ", req.session.user)
-                            console.log("navigator ", req.session.user.navigator)
-                            console.log("question ", req.session.user.questions[response.categoryId][response.questionId])
-                            req.session.user.questions[response.categoryId][response.questionId].answer = dataValidChoice
+            let validResponse = checkValidResponse(response);
+            if (validResponse.isValid) {
+                console.log("================= DEBUG Response question ======================")
+                console.log(req.body)
+                //  Verifier que les choiceIds corésponde avec les réponse possible de la question (utilise rune fonction)
+                let question = req.session.user.questions[req.session.user.navigator.currentCategory][req.session.user.navigator.currentQuestion]
+                isValidChoiceForTheQuestion(response.choiceIds, question.ID)
+                    .then(dataValidChoice => {
+                        db.execute('INSERT INTO `Answers` (userId,questionId,choiceIds,timer,correct) VALUES (?,?,?,?,?)', [req.session.user.id, question.ID, response.choiceIds, '2019-03-05 15:30:00', dataValidChoice], function (error, results, fileds) {
+                            if (error) throw error;
+                            else {
+                                console.log("response ", response)
+                                console.log("user ", req.session.user)
+                                console.log("question ", req.session.user.questions[response.categoryId][response.questionId])
 
-                            // récupérer la catégorieId , la questionId et langage Id, pour généraliser la route.
-                            changeQuestion(req.session.user, nextQuestion.nextQuestionId, nextQuestion.nextCategoriId).then(newQuestion=>{
-                                console.log("newQuestion ", newQuestion)
-                                db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [newQuestion.ID], function (error, results, fields) {
-                                    if (error) throw error;
-                                    if (results.length > 0) {
-                                        if (typeof newQuestion != "string") {
-                                            return res.send({
-                                                response: {
-                                                    sessionID: req.sessionID,
-                                                    question: newQuestion,
-                                                    questionId: req.session.user.navigator.currentQuestion,
-                                                    choice: results
-                                                }, error: ""
-                                            })
-                                        }
-                                        return res.json({response: "", error: newQuestion})
-                                    } else
-                                        return res.json({response: "", error: "Aucune choix n\'a était trouver."})
-                                });
-                            })
-                        }
+                                req.session.user.currentTimestamp = Date.now()
+                                saveTimerUser(req.session.user)
+
+                                req.session.user.questions[response.categoryId][response.questionId].answer = dataValidChoice
+                                console.log("value in questions[0]", req.session.user.questions.slice(0,1))
+                                console.log("Number of Category ",req.session.user.questions.length)
+                                console.log("Number of Question ",req.session.user.questions[req.session.user.navigator.currentCategory].length)
+                                console.log("isFinishAllQuestion ", isFinishAllQuestion(req.session.user.questions.length-1, req.session.user.questions[req.session.user.navigator.currentCategory].length))
+                                console.log("timeQcmIsFinish ", timeQcmIsFinish(req.session.user.startTimestamp, req.session.user.currentTimestamp))
+                                console.log("Codnition if finish ",isFinishAllQuestion(req.session.user.questions.length-1, req.session.user.questions[req.session.user.navigator.currentCategory].length)|| timeQcmIsFinish(req.session.user.startTimestamp, req.session.user.currentTimestamp))
+
+                                if (isFinishAllQuestion(req.session.user.questions.length-1, req.session.user.questions[req.session.user.navigator.currentCategory].length)|| timeQcmIsFinish(req.session.user.startTimestamp, req.session.user.currentTimestamp)) {
+                                    req.session.user.finish = true
+                                    db.execute('UPDATE `Users` SET `time` = ?, `finish` = ? WHERE ID = ?' ,["00:00:00",req.session.user.finish,req.session.user.id], function (error, results, fields) {
+                                        if (error) throw error;
+                                        else
+                                            console.log("in update")
+                                    })
+                                    return res.json({
+                                        response: {
+                                            sessionID: req.sessionID,
+                                            finish: true,
+                                        }, error: ""
+                                    })
+                                } else {
+                                    // récupérer la catégorieId , la questionId et langage Id, pour généraliser la route.
+                                    changeQuestion(req.session.user, nextQuestion.nextQuestionId, nextQuestion.nextCategoriId).then(newQuestion => {
+                                        console.log("newQuestion ", newQuestion)
+                                        db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [newQuestion.ID], function (error, results, fields) {
+                                            if (error) throw error;
+                                            if (results.length > 0) {
+                                                if (typeof newQuestion != "string") {
+                                                    return res.json({
+                                                        response: {
+                                                            sessionID: req.sessionID,
+                                                            question: newQuestion,
+                                                            questionId: req.session.user.navigator.currentQuestion,
+                                                            choice: results,
+                                                            tiemstamp: req.session.user.currentTimestamp
+                                                        }, error: ""
+                                                    })
+                                                }
+                                                return res.json({response: "", error: newQuestion})
+                                            } else
+                                                return res.json({response: "", error: "Aucune choix n\'a était trouver."})
+                                        });
+                                    })
+                                }
+                            }
+                        })
                     })
-                })
 
-        } else
-            return res.json({
-                response: "",
-                error: "Valeur ou/et syntax sont invalide " + validResponse.errorValue.toString()
-            })
+            } else
+                return res.json({
+                    response: "",
+                    error: "Valeur ou/et syntax sont invalide " + validResponse.errorValue.toString()
+                })
+        }else if(req.session.user.start == false){
+            return res.json({response: "", error: "Vous n'avez pas encore commencer le test."})
+        }else{
+            return res.json({response: "", error: "Vous avez fini le test , vous en pouvez pas le recommencer !!"})
+        }
     } else
         return res.json({response: "", error: "Vous n'êtes pas connecté à un compte."})
 })
@@ -207,7 +291,7 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
     return new Promise((resolve, reject) => {
 
         if(queryLangId != ""){
-            db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ?  AND ' + queryLangId + ' ORDER BY RAND(), langId LIMIT 5',[parseInt(catgeroyId)], function (error, results, fields) {
+            db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ?  AND ' + queryLangId + ' ORDER BY RAND(), langId LIMIT 5',[catgeroyId], function (error, results, fields) {
                 if (error)throw error;
 
                 if (results.length > 0) {
@@ -217,7 +301,7 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
                     return reject({response: "", error: "Aucune question n\'a était trouver."})
             })
         } else{
-            db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT 3',[parseInt(catgeroyId)], function (error, results, fields) {
+            db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT 5',[parseInt(catgeroyId)], function (error, results, fields) {
                 if (error)throw error;
 
                 if (results.length > 0) {
@@ -247,6 +331,55 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
               console.log(e)
           }
       })*/
+}
+
+/**
+ *
+ * @param startTimestamp
+ * @param currentTimestamp
+ * @returns {boolean}
+ */
+function timeQcmIsFinish (startTimestamp, currentTimestamp){
+    if((new Date(currentTimestamp).getMinutes() - new Date(startTimestamp).getMinutes()) >= 30){
+        return true;
+    }
+    return false;
+}
+
+/**
+ *
+ * @param CategoriesLength
+ * @param QuestionsLengthInLastCategory
+ * @returns {boolean}
+ */
+function isFinishAllQuestion (CategoriesLength, QuestionsLengthInLastCategory){
+    if(CategoriesLength == 6 && QuestionsLengthInLastCategory == 5){
+        return true;
+    }
+    return false;
+}
+
+
+/**
+ *
+ * @param object
+ */
+function saveTimerUser(object){
+    let timeFormat = new Date(object.currentTimestamp*1000);
+    let restMinutes = Math.abs(timeFormat.getMinutes()-30)-30
+    if(restMinutes <= 0){
+        restMinutes == "00"
+    }
+    timeFormat = "00:"+Math.abs(restMinutes)+":"+timeFormat.getSeconds()
+    console.log("timeFormat ", timeFormat)
+    object.navigator.qcmTimer = timeFormat;
+    console.log("before update")
+    db.execute('UPDATE `Users` SET `time` = ?  WHERE ID = ?' ,[timeFormat,object.id], function (error, results, fields) {
+        if (error) throw error;
+        else
+            console.log("in update")
+    })
+    console.log("after update")
 }
 
 /**
@@ -425,7 +558,7 @@ function changeQuestion(object, questionId, catgeoryId) {
                 }
                 return reject("Catégorie invalide")
             })
-        } else if (questionId == 3) {
+        } else if (questionId == 5) {
             changeCategory(object, catgeoryId + 1).then(result=>{
                 if (result) {
                     console.log("")
