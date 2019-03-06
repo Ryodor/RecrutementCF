@@ -32,7 +32,7 @@ $(function(){
         var settings = {
             "async": true,
             "crossDomain": true,
-            "url": "http://localhost:3000/api/qcm/question",
+            "url": "http://"+window.location.host+"/api/qcm/question",
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json",
@@ -91,7 +91,7 @@ $(function(){
     var settings = {
         "async": true,
         "crossDomain": true,
-        "url": "http://localhost:3000/api/qcm/start",
+        "url": "http://"+window.location.host+"/api/qcm/start",
         "method": "GET",
         "headers": {
           "Content-Type": "application/json",
@@ -159,7 +159,7 @@ $(function(){
                         var settings = {
                             "async": true,
                             "crossDomain": true,
-                            "url": "http://localhost:3000/api/qcm/finish",
+                            "url": "http://"+window.location.host+"/api/qcm/finish",
                             "method": "GET",
                             "headers": {
                                 "Content-Type": "application/json",
@@ -194,7 +194,7 @@ $(function(){
 
                 // If the count down is finished, write some text
                 if(seconds == 10 || seconds ==  20 || seconds == 30 || seconds == 40 || seconds == 50 || seconds == 60){
-                    $.ajax({async:true,crossDomain: true,url: "http://localhost:3000/"})
+                    $.ajax({async:true,crossDomain: true,url: "http://"+window.location.host+"/"})
                         .done(function (data) {
 
                         })
