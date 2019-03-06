@@ -301,7 +301,7 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
                     return reject({response: "", error: "Aucune question n\'a était trouver."})
             })
         } else{
-            db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT 5',[parseInt(catgeroyId)], function (error, results, fields) {
+            db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT 5',[catgeroyId], function (error, results, fields) {
                 if (error)throw error;
 
                 if (results.length > 0) {

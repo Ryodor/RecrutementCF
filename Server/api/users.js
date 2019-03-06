@@ -146,7 +146,7 @@ router.post('/register', function (req, res, next) {
                                     finish: false,
                                     questions: [],
                                     navigator : {
-                                        currentCategory: 0,
+                                        currentCategory: 1,
                                         currentQuestion: 0,
                                         qcmTimer:"00:30:00"
                                     }
