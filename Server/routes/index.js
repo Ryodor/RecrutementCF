@@ -13,15 +13,27 @@ router.get('/upload',function (req, res, next) {
 
 
 router.get('/login',function (req, res, next) {
-    res.render('login',{ title: 'Upload File' });
+    if(req.session.user){
+        res.render('qcm',{ title: 'Upload File' });
+    }else{
+        res.render('login',{ title: 'Upload File' });
+    }
 })
 
 router.get('/register',function (req, res, next) {
-    res.render('register',{ title: 'Upload File' });
+    if(req.session.user){
+        res.render('qcm',{ title: 'Upload File' });
+    }else{
+        res.render('register',{ title: 'Upload File' });
+    }
 })
 
 router.get('/explanationScreen', loggedIn,function (req, res, next) {
-    res.render('explanationScreen',{ title: 'Upload File' });
+    if(req.session.user){
+        res.render('qcm',{ title: 'Upload File' });
+    }else{
+        res.render('explanationScreen',{ title: 'Upload File' });
+    }
 })
 
 
