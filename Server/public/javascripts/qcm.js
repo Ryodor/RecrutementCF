@@ -1,5 +1,6 @@
 $(function(){
     var loading = $('#loadbar').hide();
+    $('#finish').hide();
     $(document)
     .ajaxStart(function () {
         loading.show();
@@ -12,12 +13,10 @@ $(function(){
         let choices = [];
         for(let i = 0;i<$("#quiz").find("input:checked").length;i++){
             let valueChoice = parseInt($("#quiz").find("input:checked")[i].value);
-            console.log(valueChoice)
             if(!choices.includes(valueChoice)){
                 choices.push(valueChoice)
             }
         }
-        console.log(choices);
         dataSend = {
             "response":{
                 "sessionId":  localStorage.getItem("codingSessionId"),
@@ -30,7 +29,6 @@ $(function(){
                 "nextCategoriId": parseInt(localStorage.getItem("qcmCategoryId"))
             }
         }
-        console.log("dataSend", dataSend)
         var settings = {
             "async": true,
             "crossDomain": true,
@@ -46,18 +44,23 @@ $(function(){
         }
 
         $.ajax(settings).done(function (data) {
-            console.log(data);
-            localStorage.setItem("qcmCategoryId",data.response.question.categoryId)
-            localStorage.setItem("qcmQuestionId",data.response.questionId)
-            $("h3").text(data.response.question.questionText)
-            console.log("before for")
-            for(let i = 0;i<$("#quiz").find("input").length;i++){
-                $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
-                console.log($("#quiz").find("label span[id=textLabel]")[i].innerHTML)
+            if(data.response){
+                if(!data.response.finish){
+                    localStorage.setItem("qcmCategoryId",data.response.question.categoryId)
+                    localStorage.setItem("qcmQuestionId",data.response.questionId)
+                    localStorage.setItem("qcmCurrentQuestion", data.response.question)
+                    $("h3").text(data.response.question.questionText)
+                    for(let i = 0;i<$("#quiz").find("input").length;i++){
+                        $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
+                    }
+                    $("#quiz").find("button").val(parseInt(data.response.questionId)+1)
+                }else{
+                    $('#questionnaire').hide();
+                    $("#finish").show();
+                }
+            }else{
+                alert(data.error)
             }
-            console.log(data.response.questionId+1)
-            $("#quiz").find("button").val(parseInt(data.response.questionId)+1)
-            console.log("after for")
         });
     	$('#loadbar').show();
     	$('#quiz').fadeOut();
@@ -99,18 +102,25 @@ $(function(){
       }
 
     $.ajax(settings).done(function (data) {
-        console.log(data);
-        localStorage.setItem("qcmCategoryId",data.response.question.categoryId)
-        localStorage.setItem("qcmQuestionId",data.response.questionId)
-        $("h3").text(data.response.question.questionText)
-        console.log("before for")
-        for(let i = 0;i<$("#quiz").find("input").length;i++){
-            $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
-            console.log($("#quiz").find("label span[id=textLabel]")[i].innerHTML)
+        if(data.response){
+            if(!data.response.finish){
+                localStorage.setItem("qcmCategoryId",data.response.question.categoryId)
+                localStorage.setItem("qcmQuestionId",data.response.questionId)
+                localStorage.setItem("qcmCurrentQuestion", data.response.question)
+                $("h3").text(data.response.question.questionText)
+                console.log("before for")
+                for(let i = 0;i<$("#quiz").find("input").length;i++){
+                    $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
+                }
+                $("#quiz").find("button").val(parseInt(data.response.questionId)+1)
+                countdown(1)
+            }else{
+                $('#questionnaire').hide();
+                $("#finish").show();
+            }
+        }else{
+            alert(data.error)
         }
-        console.log(data.response.questionId+1)
-        $("#quiz").find("button").val(data.response.questionId+1)
-        console.log("after for")
     });
 
     $ans = 3;
@@ -120,6 +130,89 @@ $(function(){
             return 'INCORRECT';
         else 
             return 'CORRECT';
-    }; 
+    };
+    function countdown(action){
+        var x
+        let minutes
+        let seconds
+        // 1 st;art - 2 modify - 3 stop
+        if(action == 1){
+            x = setInterval(function() {
+                if(minutes == undefined){
+                    minutes = 30
+                }
+                if(seconds == undefined){
+                    seconds = 60
+                }
+                if(minutes != undefined && seconds!= undefined){
+                    if(minutes == 0){
+                        clearInterval(x)
+                        $('#questionnaire').hide();
+                        $("#finish").show();
+                        dataSend= {
+                            response: localStorage.getItem("qcmCurrentQuestion"),
+                            timer:{
+                                minute: minutes,
+                                second: seconds
+                            }
+                        }
+                        var settings = {
+                            "async": true,
+                            "crossDomain": true,
+                            "url": "http://localhost:3000/api/qcm/finish",
+                            "method": "GET",
+                            "headers": {
+                                "Content-Type": "application/json",
+                                "cache-control": "no-cache",
+                            },
+                            "processData": false,
+                            "data": ""
+                        }
+
+                        $.ajax(settings).done(function (data) {
+                            console.log(data);
+                            if(data.response){
+                                if(!data.response.finish){
+
+                                }else{
+
+                                }
+                            }else{
+                                alert(data.error)
+                            }
+                        });
+                    }
+                    if(seconds == 0 && minutes > 0){
+                        minutes-= 1
+                        seconds = 60
+                    }
+                }
+                seconds -= 1;
+                // Display the result in the element with id="demo"
+                document.getElementById("timer").innerHTML =
+                    minutes + "m " + seconds + "s ";
+
+                // If the count down is finished, write some text
+                if(seconds == 10 || seconds ==  20 || seconds == 30 || seconds == 40 || seconds == 50 || seconds == 60){
+                    $.ajax({async:true,crossDomain: true,url: "http://localhost:3000/"})
+                        .done(function (data) {
+
+                        })
+                        .fail(function() {
+                            clearInterval(x)
+                            $("#questionnaire").before("<h1> Erreur la connexion avec le serveur a était intérompue</h1>")
+                            $("#questionnaire").remove()
+                            $("#finish").remove()
+                            //window.location.reload()
+                        })
+                }
+
+            }, 1000);
+        }else if(action == 2){
+
+        }else{
+
+        }
+    }
 
 });	

@@ -22,7 +22,7 @@ $(document).ready(function () {
 
 
          $.ajax(settings).done(function (data) {
-            if (data) {
+            if (data.response) {
                 console.log("Succeeded : ", data);
                 localStorage.setItem("debug", data.response);
                 localStorage.setItem("codingLogin", data.response.login);
