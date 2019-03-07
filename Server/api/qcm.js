@@ -1,6 +1,8 @@
 let express = require('express');
 let router = express.Router();
 
+let updateTimerUsers = new Map()
+
 router.get('/', function (req, res, next) {
     res.send("Sa semble fonctionner")
     console.log(req.session.user)
@@ -57,6 +59,8 @@ router.get('/start', function (req, res, next) {
                                         if (error) throw error;
 
                                         if (results.length > 0) {
+                                            let timer = req.session.user.navigator.qcmTimer.split(":")
+                                            console.log("timer ",timer)
                                             return res.send({
                                                 response: {
                                                     sessionID: req.sessionID,
@@ -65,7 +69,11 @@ router.get('/start', function (req, res, next) {
                                                     question: question[0],
                                                     questionId: 0,
                                                     choice: results,
-                                                    tiemstamp: req.session.user.currentTimestamp
+                                                    tiemstamp: req.session.user.currentTimestamp,
+                                                    timer:{
+                                                        minutes: timer[1],
+                                                        seconds: timer[2]
+                                                    }
                                                 }, error: ""
                                             });
                                         } else
@@ -90,6 +98,10 @@ router.get('/start', function (req, res, next) {
                     if (error) throw error;
 
                     if (results.length > 0) {
+                        req.session.user.currentTimestamp = Date.now()
+                        saveTimerUser(req.session.user)
+                        let timer = req.session.user.navigator.qcmTimer.split(":")
+                        console.log("timer :",timer)
                         return res.json({
                             response: {
                                 sessionID: req.sessionID,
@@ -98,7 +110,11 @@ router.get('/start', function (req, res, next) {
                                 question: question,
                                 questionId: req.session.user.navigator.currentQuestion,
                                 choice: results,
-                                tiemstamp: req.session.user.currentTimestamp
+                                tiemstamp: req.session.user.currentTimestamp,
+                                timer: {
+                                    minutes: timer[1],
+                                    seconds: timer[2]
+                                }
                             }, error: ""
                         });
                     } else {
@@ -140,7 +156,7 @@ router.post('/finish', function (req, res, next) {
             }else{
                 let checkQuestion = req.body.response.question;
                 let lastQuestionId = session.user.question[req.session.user.navigator.currentCategory].length
-                if(checkQuestion.categoryId == req.session.user.navigator.currentCategory && req.session.user.question[req.session.user.navigator.currentCategory][lastQuestionId]){
+                if(checkQuestion.categoryId == req.session.user.navigator.currentCategory && req.session.user.question[req.session.user.navigator.currentCategory][lastQuestionId] == req.session.user.navigator.currentQuestion){
                     req.session.user.finish == true
                     req.session.user.currentTimestamp = Date.now()
                     saveTimerUser(req.session.user)
@@ -189,13 +205,14 @@ router.post('/question', function (req, res, next) {
 
                                 req.session.user.questions[response.categoryId][response.questionId].answer = dataValidChoice
                                 console.log("value in questions[0]", req.session.user.questions.slice(0,1))
+                                console.log("current Category ",req.session.user.navigator.currentCategory)
+                                console.log("current Question ",req.session.user.navigator.currentQuestion)
                                 console.log("Number of Category ",req.session.user.questions.length)
                                 console.log("Number of Question ",req.session.user.questions[req.session.user.navigator.currentCategory].length)
-                                console.log("isFinishAllQuestion ", isFinishAllQuestion(req.session.user.questions.length-1, req.session.user.questions[req.session.user.navigator.currentCategory].length))
+                                console.log("isFinishAllQuestion ", isFinishAllQuestion(req.session.user))
                                 console.log("timeQcmIsFinish ", timeQcmIsFinish(req.session.user.startTimestamp, req.session.user.currentTimestamp))
-                                console.log("Codnition if finish ",isFinishAllQuestion(req.session.user.questions.length-1, req.session.user.questions[req.session.user.navigator.currentCategory].length)|| timeQcmIsFinish(req.session.user.startTimestamp, req.session.user.currentTimestamp))
 
-                                if (isFinishAllQuestion(req.session.user.questions.length-1, req.session.user.questions[req.session.user.navigator.currentCategory].length)|| timeQcmIsFinish(req.session.user.startTimestamp, req.session.user.currentTimestamp)) {
+                                if (isFinishAllQuestion(req.session.user)|| timeQcmIsFinish(req.session.user.startTimestamp, req.session.user.currentTimestamp)) {
                                     req.session.user.finish = true
                                     db.execute('UPDATE `Users` SET `time` = ?, `finish` = ? WHERE ID = ?' ,["00:00:00",req.session.user.finish,req.session.user.id], function (error, results, fields) {
                                         if (error) throw error;
@@ -348,13 +365,27 @@ function timeQcmIsFinish (startTimestamp, currentTimestamp){
 
 /**
  *
- * @param CategoriesLength
- * @param QuestionsLengthInLastCategory
+ * @param objectUser
  * @returns {boolean}
  */
-function isFinishAllQuestion (CategoriesLength, QuestionsLengthInLastCategory){
-    if(CategoriesLength == 6 && QuestionsLengthInLastCategory == 5){
-        return true;
+function isFinishAllQuestion (objectUser){
+    console.log("objectUser ",objectUser)
+    if( objectUser.questions[objectUser.navigator.allCategoriesExists.length] == undefined){
+        return false;
+    }else{
+        let lastQuestionId = objectUser.questions[objectUser.navigator.allCategoriesExists.length].length
+        console.log(lastQuestionId)
+        console.log(objectUser.questions[objectUser.navigator.allCategoriesExists.length].length)
+        console.log(objectUser.questions[objectUser.navigator.allCategoriesExists.length])
+        if(objectUser.questions[objectUser.navigator.allCategoriesExists.length] == null){
+            console.log("the last Category have not object")
+        }else{
+            console.log(objectUser.questions[objectUser.navigator.allCategoriesExists.length][lastQuestionId])
+            console.log(objectUser.navigator.currentQuestion)
+            if(objectUser.navigator.allCategoriesExists.length == objectUser.navigator.currentCategory && objectUser.navigator.currentQuestion == objectUser.questions[objectUser.navigator.currentCategory].length -1){
+                return true;
+            }
+        }
     }
     return false;
 }
@@ -365,16 +396,21 @@ function isFinishAllQuestion (CategoriesLength, QuestionsLengthInLastCategory){
  * @param object
  */
 function saveTimerUser(object){
-    let timeFormat = new Date(object.currentTimestamp*1000);
-    let restMinutes = Math.abs(timeFormat.getMinutes()-30)-30
-    if(restMinutes <= 0){
-        restMinutes == "00"
+
+    let minutes = Math.abs(new Date(object.currentTimestamp).getMinutes() - new Date(object.startTimestamp).getMinutes() - 30)-1
+    let seconds = Math.abs(new Date(object.currentTimestamp).getSeconds() - new Date(object.startTimestamp).getSeconds() - 60)
+    if(minutes <= 0){
+        minutes == "00"
     }
-    timeFormat = "00:"+Math.abs(restMinutes)+":"+timeFormat.getSeconds()
+    if(seconds > 60){
+        seconds = 59
+    }
+    let timeFormat = "00:"+minutes+":"+seconds
     console.log("timeFormat ", timeFormat)
+    console.log("Time formart = ",object.navigator.qcmTimer)
     object.navigator.qcmTimer = timeFormat;
     console.log("before update")
-    db.execute('UPDATE `Users` SET `time` = ?  WHERE ID = ?' ,[timeFormat,object.id], function (error, results, fields) {
+    db.execute('UPDATE `Users` SET `time` = ?  WHERE ID = ?' ,[object.navigator.qcmTimer,object.id], function (error, results, fields) {
         if (error) throw error;
         else
             console.log("in update")
@@ -549,6 +585,8 @@ function changeCategory(object, categoryId) {
  */
 function changeQuestion(object, questionId, catgeoryId) {
     return new Promise((resolve, reject) => {
+        console.log("nbQuestion ",object.questions[catgeoryId].length)
+        console.log("nbQuestion ",object.navigator.currentQuestion)
         if (object.questions[catgeoryId] == undefined) {
             changeCategory(object, catgeoryId).then(result=>{
                 if (result) {
@@ -558,7 +596,7 @@ function changeQuestion(object, questionId, catgeoryId) {
                 }
                 return reject("Catégorie invalide")
             })
-        } else if (questionId == 5) {
+        } else if (object.questions[catgeoryId].length-1 == object.navigator.currentQuestion) {
             changeCategory(object, catgeoryId + 1).then(result=>{
                 if (result) {
                     console.log("")

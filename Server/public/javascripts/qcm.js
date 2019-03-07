@@ -57,6 +57,7 @@ $(function(){
                 }else{
                     $('#questionnaire').hide();
                     $("#finish").show();
+                    countdown(2)
                 }
             }else{
                 alert(data.error)
@@ -102,6 +103,7 @@ $(function(){
       }
 
     $.ajax(settings).done(function (data) {
+        console.log(data)
         if(data.response){
             if(!data.response.finish){
                 localStorage.setItem("qcmCategoryId",data.response.question.categoryId)
@@ -113,7 +115,7 @@ $(function(){
                     $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
                 }
                 $("#quiz").find("button").val(parseInt(data.response.questionId)+1)
-                countdown(1)
+                countdown(1, data.response.timer)
             }else{
                 $('#questionnaire').hide();
                 $("#finish").show();
@@ -131,13 +133,16 @@ $(function(){
         else 
             return 'CORRECT';
     };
-    function countdown(action){
+    function countdown(action, timer){
+        console.log(timer)
         var x
-        let minutes
-        let seconds
+        let minutes = parseInt(timer.minutes)
+        let seconds = parseInt(timer.seconds)
         // 1 st;art - 2 modify - 3 stop
         if(action == 1){
             x = setInterval(function() {
+                console.log(minutes)
+                console.log(seconds)
                 if(minutes == undefined){
                     minutes = 30
                 }
@@ -160,7 +165,7 @@ $(function(){
                             "async": true,
                             "crossDomain": true,
                             "url": "http://"+window.location.host+"/api/qcm/finish",
-                            "method": "GET",
+                            "method": "POST",
                             "headers": {
                                 "Content-Type": "application/json",
                                 "cache-control": "no-cache",
@@ -209,7 +214,7 @@ $(function(){
 
             }, 1000);
         }else if(action == 2){
-
+            clearInterval(x)
         }else{
 
         }

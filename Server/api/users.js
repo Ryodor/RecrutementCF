@@ -53,24 +53,18 @@ router.post('/login', function (req, res, next) {
                                     finish: results[0].finish == 0 ? false : true,
                                     checkHash: bcrypt.hashSync(results[0].ID + results[0].firstName + results[0].lastName + req.sessionID, bcrypt.genSaltSync(1), null)
                                 }
-                                db.execute('SELECT * FROM `Categories` ', function (error, results, fields) {
-                                    if (error) throw error;
-                                    else if (results.length > 0) {
-                                        let Categories = results;
-                                        console.log(req.user)
-                                    }
-                                })
+
                                 req.user.login = results[0].email
                                 req.session.user = req.user
                                 req.session.user.questions = []
-                                req.session.user.test = function(){
-                                    console.log("test")
-                                }
                                 req.session.user.navigator = {
                                     currentCategory: 1,
                                     currentQuestion: 0,
-                                    qcmTimer:"00:30:00",
+                                    qcmTimer:results[0].time,
                                 }
+                               /* restoreDataQcm(req.session.user, req.session.user.id)
+                                    .then()
+                                    .catch()*/
                                 console.log("req.session ",req.session)
                                 console.log("req.sessionId ",req.sessionID)
                                 //res.set('Set-Cookie', req.session.cookie);
