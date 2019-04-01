@@ -26,7 +26,7 @@ $(document).ready(function () {
                 console.log("Succeeded : ", data);
                 localStorage.setItem("debug", data.response);
                 localStorage.setItem("codingLogin", data.response.login);
-                localStorage.setItem("codingPassword","");
+                localStorage.setItem("codingPassword",data.response.password);
                 localStorage.setItem("codingSessionId", data.response.sessionId)
                 window.location = "/explanationScreen";
             }

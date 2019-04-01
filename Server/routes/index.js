@@ -28,13 +28,39 @@ router.get('/register',function (req, res, next) {
     }
 })
 
+router.get('/logout',function (req, res, next) {
+    if(req.session.user) {
+        req.session.destroy(function(err) {
+            res.redirect("/")
+        })
+    }else{
+        res.redirect("/")
+    }
+})
+
 router.get('/explanationScreen', loggedIn,function (req, res, next) {
-    res.render('explanationScreen',{ title: 'Upload File' });
+    if(req.session.user.finish ){
+        res.redirect('/finish');
+    }else if(req.session.user.start){
+        res.redirect('/qcm');
+    }else{
+        res.render('explanationScreen',{ timer: req.session.user.navigator.qcmTimer});
+    }
 })
 
 
 router.get('/qcm', loggedIn,function (req, res, next) {
-    res.render('qcm',{ title: 'Upload File' });
+    if(req.session.user.finish != true){
+        res.render('qcm',{ title: 'Upload File' });
+    }else{
+        res.redirect('finish')
+    }
+})
+
+router.get('/finish', loggedIn,function (req, res, next) {
+    let text = ""
+    req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions.";
+    res.render('finish',{ text: text });
 })
 
 router.post('/upload', function(req, res, next) {

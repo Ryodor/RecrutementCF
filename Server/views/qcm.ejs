@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <script src="/assets/js/bootstrap.min.js"></script>
     <script src="/assets/jquery.min.js"></script>
@@ -9,7 +9,30 @@
     <link rel="stylesheet" href="/stylesheets/qcm.css"/>
 </head>
 <body>
-<div></div>
+
+<nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+        <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+        <li class="page-item"><a class="page-link" href="#">Agilite</a></li>
+        <li class="page-item"><a class="page-link" href="#">Culture</a></li>
+        <li class="page-item"><a class="page-link" href="#">Web</a></li>
+        <li class="page-item"><a class="page-link" href="#">Syntaxe</a></li>
+        <li class="page-item"><a class="page-link" href="#">Theorie</a></li>
+        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+    </ul>
+</nav>
+<nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+        <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+        <li class="page-item"><a class="page-link" href="#">1</a></li>
+        <li class="page-item"><a class="page-link" href="#">2</a></li>
+        <li class="page-item"><a class="page-link" href="#">3</a></li>
+        <li class="page-item"><a class="page-link" href="#">4</a></li>
+        <li class="page-item"><a class="page-link" href="#">5</a></li>
+        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+    </ul>
+</nav>
+
 <div class="modal-dialog">
     <div class="modal-content" id="questionnaire">
         <p id="timer"></p>
@@ -30,19 +53,40 @@
                 </div>
             </div>
             <div class="quiz" id="quiz" data-toggle="buttons">
-                <label class="element-animation1 btn btn-lg btn-light btn-block"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="checkbox" class="hidden" name="q_answer" value="1"><span id="textLabel">1 One</span></label>
-                <label class="element-animation2 btn btn-lg btn-light btn-block"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="checkbox" class="hidden" name="q_answer" value="2"><span id="textLabel">2 Two</span></label>
-                <label class="element-animation3 btn btn-lg btn-light btn-block"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="checkbox" class="hidden" name="q_answer" value="3"><span id="textLabel">3 Three</span></label>
-                <label class="element-animation4 btn btn-lg btn-light btn-block"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="checkbox" class="hidden" name="q_answer" value="4"><span id="textLabel">4 Four</span></label>
+                <label class="element-animation1 btn btn-lg btn-light btn-block"><span class="btn-label"><i
+                                class="glyphicon glyphicon-chevron-right"></i></span> <input type="checkbox"
+                                                                                             class="hidden"
+                                                                                             name="q_answer"
+                                                                                             value="1"><span
+                            id="textLabel">1 One</span></label>
+                <label class="element-animation2 btn btn-lg btn-light btn-block"><span class="btn-label"><i
+                                class="glyphicon glyphicon-chevron-right"></i></span> <input type="checkbox"
+                                                                                             class="hidden"
+                                                                                             name="q_answer"
+                                                                                             value="2"><span
+                            id="textLabel">2 Two</span></label>
+                <label class="element-animation3 btn btn-lg btn-light btn-block"><span class="btn-label"><i
+                                class="glyphicon glyphicon-chevron-right"></i></span> <input type="checkbox"
+                                                                                             class="hidden"
+                                                                                             name="q_answer"
+                                                                                             value="3"><span
+                            id="textLabel">3 Three</span></label>
+                <label class="element-animation4 btn btn-lg btn-light btn-block"><span class="btn-label"><i
+                                class="glyphicon glyphicon-chevron-right"></i></span> <input type="checkbox"
+                                                                                             class="hidden"
+                                                                                             name="q_answer"
+                                                                                             value="4"><span
+                            id="textLabel">4 Four</span></label>
                 <button id="SubmitBtn" type="" class="element-animation5 btn btn-primary btn-lg">Valider</button>
             </div>
         </div>
     </div>
     <div id="finish" class="inner">
-        <img src="/images/logoCF.jpg" id="icon" alt="User Icon" />
+        <img src="/images/logoCF.jpg" id="icon" alt="User Icon"/>
         <div class="text-center">
-            <h1>Bravo,vous avez fini le test !!</h1>
-            <p> Mintenant vous pouvez quitter votre ordinateur ,<br/> je vous souhaite uen bonne continuation pour la suite ;)</p>
+            <h1>Bravo, vous avez fini le test !!</h1>
+            <p>Maintenant vous pouvez quitter votre ordinateur ,<br/> je vous souhaite une bonne continuation pour la
+                suite ;)</p>
         </div>
     </div>
 </div>

@@ -1,15 +1,19 @@
 $(function(){
     var loading = $('#loadbar').hide();
+    $("#quiz").hide();
     $('#finish').hide();
-    $(document)
+ /*   $(document)
     .ajaxStart(function () {
         loading.show();
     }).ajaxStop(function () {
     	loading.hide();
-    });
+    });*/
+    loading.show();
     
     $("#SubmitBtn").on('click',function () {
         //var choice = $(this).find('input:radio').val();
+        $("#quiz").hide();
+        loading.show();
         let choices = [];
         for(let i = 0;i<$("#quiz").find("input:checked").length;i++){
             let valueChoice = parseInt($("#quiz").find("input:checked")[i].value);
@@ -54,6 +58,8 @@ $(function(){
                         $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
                     }
                     $("#quiz").find("button").val(parseInt(data.response.questionId)+1)
+                    loading.hide();
+                    $("#quiz").show();
                 }else{
                     $('#questionnaire').hide();
                     $("#finish").show();
@@ -116,6 +122,8 @@ $(function(){
                 }
                 $("#quiz").find("button").val(parseInt(data.response.questionId)+1)
                 countdown(1, data.response.timer)
+                $("#quiz").show();
+                loading.hide();
             }else{
                 $('#questionnaire').hide();
                 $("#finish").show();
@@ -133,16 +141,14 @@ $(function(){
         else 
             return 'CORRECT';
     };
+
     function countdown(action, timer){
-        console.log(timer)
         var x
         let minutes = parseInt(timer.minutes)
         let seconds = parseInt(timer.seconds)
         // 1 st;art - 2 modify - 3 stop
         if(action == 1){
             x = setInterval(function() {
-                console.log(minutes)
-                console.log(seconds)
                 if(minutes == undefined){
                     minutes = 30
                 }
@@ -150,8 +156,7 @@ $(function(){
                     seconds = 60
                 }
                 if(minutes != undefined && seconds!= undefined){
-                    if(minutes == 0){
-                        clearInterval(x)
+                    if(minutes == 0 && seconds == 0){
                         $('#questionnaire').hide();
                         $("#finish").show();
                         dataSend= {
@@ -171,9 +176,9 @@ $(function(){
                                 "cache-control": "no-cache",
                             },
                             "processData": false,
-                            "data": ""
+                            "data": JSON.stringify(dataSend)
                         }
-
+                        clearInterval(x)
                         $.ajax(settings).done(function (data) {
                             console.log(data);
                             if(data.response){
@@ -187,7 +192,7 @@ $(function(){
                             }
                         });
                     }
-                    if(seconds == 0 && minutes > 0){
+                    if(seconds == 0){
                         minutes-= 1
                         seconds = 60
                     }
@@ -198,7 +203,7 @@ $(function(){
                     minutes + "m " + seconds + "s ";
 
                 // If the count down is finished, write some text
-                if(seconds == 10 || seconds ==  20 || seconds == 30 || seconds == 40 || seconds == 50 || seconds == 60){
+/*                if(seconds == 10 || seconds ==  20 || seconds == 30 || seconds == 40 || seconds == 50 || seconds == 60){
                     $.ajax({async:true,crossDomain: true,url: "http://"+window.location.host+"/"})
                         .done(function (data) {
 
@@ -210,7 +215,7 @@ $(function(){
                             $("#finish").remove()
                             //window.location.reload()
                         })
-                }
+                }*/
 
             }, 1000);
         }else if(action == 2){

@@ -1,8 +1,6 @@
 let express = require('express');
 let router = express.Router();
 
-let updateTimerUsers = new Map()
-
 router.get('/', function (req, res, next) {
     res.send("Sa semble fonctionner")
     console.log(req.session.user)
@@ -49,9 +47,15 @@ router.get('/start', function (req, res, next) {
                             .then(question => {
                                 console.log("[DEBUG] question1 ", question)
                                 req.session.user.start = true
+                                req.session.user.navigator.currentCategory = 1
+                                req.session.user.navigator.currentQuestion = 0
                                 req.session.user.questions[1] = question
                                 req.session.user.startTimestamp = Date.now()
+                                db.execute('UPDATE `Users` SET `timestampStart` = ?',[req.session.user.startTimestamp],function(err,results,fields){
+                                    if(err) throw err
+                                })
                                 req.session.user.currentTimestamp = Date.now()
+                                //req.session.user.navigator.qcmTimer = "00:30:00"
                                 req.session.user.navigator.allCategoriesExists = Categories
 
                                 setImmediate(() => {
@@ -61,6 +65,9 @@ router.get('/start', function (req, res, next) {
                                         if (results.length > 0) {
                                             let timer = req.session.user.navigator.qcmTimer.split(":")
                                             console.log("timer ",timer)
+                                            results.forEach(element=>{
+                                                delete element.rightAnswer
+                                            })
                                             return res.send({
                                                 response: {
                                                     sessionID: req.sessionID,
@@ -82,7 +89,8 @@ router.get('/start', function (req, res, next) {
                                 })
                             })
                             .catch(error => {
-                                return res.json({response: "", error: "Aucune question n\'a était trouver."})
+                                throw error
+                                return res.json({response: "", error: "Aucune question n\'a était trouver 3. "+error})
                             })
                     } else {
                         return res.json({
@@ -126,10 +134,13 @@ router.get('/start', function (req, res, next) {
                 })
             }
         }else{
-            return res.json({
-                response: {sessionId: req.sessionID,finish : true},
+            let text = ""
+            req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions .";
+            return res.redirect("/finish")
+           /* return res.json({
+                response: {sessionId: req.sessionID,finish : true, finishText: text},
                 error: ""
-            })
+            })*/
         }
     } else
         return res.send({response: "", error: "Vous n'êtes pas connecter a un compte."})
@@ -139,20 +150,29 @@ router.get('/start', function (req, res, next) {
 router.post('/finish', function (req, res, next) {
     if (req.session.user) {
         if(!req.session.user.finish && req.session.user.start){
-            req.body.timer
+            console.log("time : ",req.body)
             if( req.body.timer.minute == 0 &&  req.body.timer.second == 0){
                 req.session.user.finish == true
-                db.execute('UPDATE `Users` SET `finish` = ?, `timer` = ? WHERE ID = ?' ,[req.session.user.finish, "00:00:00",req.session.user.id], function (error, results, fields) {
+                db.execute('UPDATE `Users` SET `finish` = ?, `time` = ? WHERE ID = ?' ,[1, "00:00:00",req.session.user.id], function (error, results, fields) {
                     if (error) throw error;
                     else
                         console.log("in update")
                 })
-                return res.json({
+                let text = ""
+                req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions .";
+                return res.redirect("/finish")
+                /*return res.json({
                     response: {
                         sessionID: req.sessionID,
                         finish: true,
+                        finishText: text
                     }, error: ""
-                })
+                })*/
+            }else if((req.body.timer.minute > 0 && req.body.timer.second > 0) || (req.body.timer.minute == 0 && req.body.timer.second > 0) || (req.body.timer.minute > 0 && req.body.timer.second == 0)){
+                return res.redirect("/finish")
+                /*return res.json({
+                    response: "", error: "Vous n'avez déjà fini le test ou le temps n'ets aps encore écouler."
+                })*/
             }else{
                 let checkQuestion = req.body.response.question;
                 let lastQuestionId = session.user.question[req.session.user.navigator.currentCategory].length
@@ -165,15 +185,31 @@ router.post('/finish', function (req, res, next) {
                         else
                             console.log("in update")
                     })
-                    return res.json({
+                    let text = ""
+                    req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions.";
+                    return res.redirect("/finish")
+                    /*return res.json({
                         response: {
                             sessionID: req.sessionID,
                             finish: true,
+                            finishText: text
                         }, error: ""
-                    })
+                    })*/
                 }
             }
+        }else if(req.session.user.finish){
+            return res.json({
+                response: "", error: "Vous avez déjà fini le test."
+            })
+        }else{
+            return res.json({
+                response: "", error: "vous n'avez pas encore commencer le test."
+            })
         }
+    }else{
+        return res.json({
+            response: "", error: "Vous n'êtes pas connecter"
+        })
     }
 })
 
@@ -193,7 +229,9 @@ router.post('/question', function (req, res, next) {
                 let question = req.session.user.questions[req.session.user.navigator.currentCategory][req.session.user.navigator.currentQuestion]
                 isValidChoiceForTheQuestion(response.choiceIds, question.ID)
                     .then(dataValidChoice => {
-                        db.execute('INSERT INTO `Answers` (userId,questionId,choiceIds,timer,correct) VALUES (?,?,?,?,?)', [req.session.user.id, question.ID, response.choiceIds, '2019-03-05 15:30:00', dataValidChoice], function (error, results, fileds) {
+                        let dateSaveAnswers = new Date()
+                        let dateFormat = dateSaveAnswers.getFullYear()+"-"+dateSaveAnswers.getMonth()+'-'+dateSaveAnswers.getDay()+" "+dateSaveAnswers.getHours()+":"+dateSaveAnswers.getMinutes()+":"+dateSaveAnswers.getSeconds()
+                        db.execute('INSERT INTO `Answers` (userId,questionId,choiceIds,timer,correct) VALUES (?,?,?,?,?)', [req.session.user.id, question.ID, response.choiceIds, dateFormat, dataValidChoice], function (error, results, fileds) {
                             if (error) throw error;
                             else {
                                 console.log("response ", response)
@@ -203,28 +241,35 @@ router.post('/question', function (req, res, next) {
                                 req.session.user.currentTimestamp = Date.now()
                                 saveTimerUser(req.session.user)
 
-                                req.session.user.questions[response.categoryId][response.questionId].answer = dataValidChoice
+                                req.session.user.questions[response.categoryId][response.questionId].answer = {
+                                    ID: results.insertId,
+                                    choiceIds: response.choiceIds
+                                }
                                 console.log("value in questions[0]", req.session.user.questions.slice(0,1))
                                 console.log("current Category ",req.session.user.navigator.currentCategory)
                                 console.log("current Question ",req.session.user.navigator.currentQuestion)
                                 console.log("Number of Category ",req.session.user.questions.length)
                                 console.log("Number of Question ",req.session.user.questions[req.session.user.navigator.currentCategory].length)
                                 console.log("isFinishAllQuestion ", isFinishAllQuestion(req.session.user))
-                                console.log("timeQcmIsFinish ", timeQcmIsFinish(req.session.user.startTimestamp, req.session.user.currentTimestamp))
+                                console.log("timeQcmIsFinish ", timeQcmIsFinish(req.session.user))
 
-                                if (isFinishAllQuestion(req.session.user)|| timeQcmIsFinish(req.session.user.startTimestamp, req.session.user.currentTimestamp)) {
+                                if (isFinishAllQuestion(req.session.user)|| timeQcmIsFinish(req.session.user)) {
                                     req.session.user.finish = true
-                                    db.execute('UPDATE `Users` SET `time` = ?, `finish` = ? WHERE ID = ?' ,["00:00:00",req.session.user.finish,req.session.user.id], function (error, results, fields) {
+                                    db.execute('UPDATE `Users` SET `time` = ?, `finish` = ? WHERE ID = ?' ,[req.session.user.navigator.qcmTimer,req.session.user.finish,req.session.user.id], function (error, results, fields) {
                                         if (error) throw error;
                                         else
                                             console.log("in update")
                                     })
-                                    return res.json({
+                                    let text = ""
+                                    req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes";
+                                    return res.redirect("/finish")
+                                    /*return res.json({
                                         response: {
                                             sessionID: req.sessionID,
                                             finish: true,
+                                            finishText: text
                                         }, error: ""
-                                    })
+                                    })*/
                                 } else {
                                     // récupérer la catégorieId , la questionId et langage Id, pour généraliser la route.
                                     changeQuestion(req.session.user, nextQuestion.nextQuestionId, nextQuestion.nextCategoriId).then(newQuestion => {
@@ -267,8 +312,29 @@ router.post('/question', function (req, res, next) {
         return res.json({response: "", error: "Vous n'êtes pas connecté à un compte."})
 })
 
-router.get('/question/:id', function (req, res, next) {
-
+router.get('/question', function (req, res, next) {
+    console.log(req.query)
+    changeQuestion(req.session.user, nextQuestion.nextQuestionId, nextQuestion.nextCategoriId).then(newQuestion => {
+        console.log("newQuestion ", newQuestion)
+        db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [newQuestion.ID], function (error, results, fields) {
+            if (error) throw error;
+            if (results.length > 0) {
+                if (typeof newQuestion != "string") {
+                    return res.json({
+                        response: {
+                            sessionID: req.sessionID,
+                            question: newQuestion,
+                            questionId: req.session.user.navigator.currentQuestion,
+                            choice: results,
+                            tiemstamp: req.session.user.currentTimestamp
+                        }, error: ""
+                    })
+                }
+                return res.json({response: "", error: newQuestion})
+            } else
+                return res.json({response: "", error: "Aucune choix n\'a était trouver."})
+        });
+    })
 })
 
 // =================================================================
@@ -303,51 +369,33 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
         })
     })
     let executeQuery = ""
+    console.log("CategoryId",catgeroyId)
     console.log("queryLangId ",queryLangId)
     console.log("queryLangId condition ", queryLangId != "")
     return new Promise((resolve, reject) => {
 
         if(queryLangId != ""){
             db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ?  AND ' + queryLangId + ' ORDER BY RAND(), langId LIMIT 5',[catgeroyId], function (error, results, fields) {
-                if (error)throw error;
+                if (error)reject({response: "", error: error});
 
                 if (results.length > 0) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver."})
+                    return reject({response: "", error: "Aucune question n\'a était trouver 2."})
             })
         } else{
             db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT 5',[catgeroyId], function (error, results, fields) {
-                if (error)throw error;
+                if (error) reject({response: "", error: error});
 
                 if (results.length > 0) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver."})
+                    return reject({response: "", error: "Aucune question n\'a était trouver 1."})
             })
         }
     })
-
-    /*  return new Promise((resolve, reject) => {
-
-          console.log("[debug] executeQuery ", executeQuery)
-          console.log("[debug] catgeroyId ", catgeroyId)
-          try {
-              db.execute(executeQuery,[parseInt(catgeroyId)], function (error, results, fields) {
-                  if (error)throw error;
-
-                  if (results.length > 0) {
-                      console.log("results ", results)
-                      return resolve(results)
-                  } else
-                      return reject({response: "", error: "Aucune question n\'a était trouver."})
-              })
-          }catch (e) {
-              console.log(e)
-          }
-      })*/
 }
 
 /**
@@ -356,8 +404,9 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
  * @param currentTimestamp
  * @returns {boolean}
  */
-function timeQcmIsFinish (startTimestamp, currentTimestamp){
-    if((new Date(currentTimestamp).getMinutes() - new Date(startTimestamp).getMinutes()) >= 30){
+function timeQcmIsFinish (objectUser){
+    let time = objectUser.navigator.qcmTimer.split(":")
+    if(parseInt(time[1]) == 0 && parseInt(time[2]) == 0){
         return true;
     }
     return false;
@@ -374,9 +423,7 @@ function isFinishAllQuestion (objectUser){
         return false;
     }else{
         let lastQuestionId = objectUser.questions[objectUser.navigator.allCategoriesExists.length].length
-        console.log(lastQuestionId)
-        console.log(objectUser.questions[objectUser.navigator.allCategoriesExists.length].length)
-        console.log(objectUser.questions[objectUser.navigator.allCategoriesExists.length])
+
         if(objectUser.questions[objectUser.navigator.allCategoriesExists.length] == null){
             console.log("the last Category have not object")
         }else{
@@ -402,7 +449,7 @@ function saveTimerUser(object){
     if(minutes <= 0){
         minutes == "00"
     }
-    if(seconds > 60){
+    if(seconds >= 60){
         seconds = 59
     }
     let timeFormat = "00:"+minutes+":"+seconds
@@ -426,28 +473,37 @@ function saveTimerUser(object){
  */
 function isValidChoiceForTheQuestion(userChoices, questionsId) {
     return new Promise((resolve, reject) => {
+        console.log("============== DEBUG is Valid Choice ===============")
         db.execute('SELECT `rightAnswer` FROM `Choice` WHERE  `questionId` = ? ', [questionsId], function (error, results, fields) {
             if (error) throw error;
             if (results.length > 0) {
-                let numberIsValid = 0;
+                let numberChoiceIsValid = 0;
                 let validChoice = 0;
                 console.log("results", results)
+                console.log("user choice ",userChoices)
                 results.forEach(choice => {
                     if (choice.rightAnswer == 1)
-                        numberIsValid += 1
+                        numberChoiceIsValid += 1
                 })
-                results.forEach(choice => {
-                    userChoices.forEach(userChoice => {
-                        if (choice.rightAnswer == userChoice)
-                            validChoice += 1;
-                    })
+                userChoices.forEach(userChoice => {
+                    console.log("userChoice =",userChoice)
+                    console.log("results[userChoice-1] = ",results[userChoice-1])
+                    if(results[userChoice-1].rightAnswer == 1){
+                        validChoice += 1;
+                    }
                 })
-                if (numberIsValid == validChoice)
+                console.log("numberChoiceIsValid ",numberChoiceIsValid)
+                console.log("validChoice ",validChoice)
+                console.log("userChoices length ",userChoices.length)
+                console.log("numberChoiceIsValid == validChoice",numberChoiceIsValid == validChoice)
+                console.log("numberChoiceIsValid == userChoices.length", numberChoiceIsValid == userChoices.length)
+                if (numberChoiceIsValid == validChoice && numberChoiceIsValid == userChoices.length)
                     return resolve(1)
                 else
                     return resolve(0)
             } else
                 return reject({response: "", error: "Aucune question n\'a était trouver."})
+            console.log("================================================")
         })
     })
 }
