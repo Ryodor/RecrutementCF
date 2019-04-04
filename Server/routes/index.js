@@ -4,7 +4,14 @@ let passport = require("passport")
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-    res.render('index', { title: 'Express' });
+    if(req.session.user){
+        if(req.session.user.finish)
+            res.redirect('/finish');
+        else
+            res.redirect('/qcm');
+    }else{
+        res.redirect('/login');
+    }
 });
 
 router.get('/upload',function (req, res, next) {
