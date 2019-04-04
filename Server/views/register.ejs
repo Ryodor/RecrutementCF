@@ -1,21 +1,29 @@
-<link href="/assets/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<script src="/assets/css/bootstrap.min.css"></script>
-<script src="/assets/jquery.min.js"></script>
-<script src="/javascripts/registerForm.js"></script>
-<link href="/stylesheets/registerForm.css" rel="stylesheet">
+<!DOCTYPE html>
+<html>
 
+<head>
+    <title>Resgister</title>
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="/assets/css/bootstrap.min.css"></script>
+    <script src="/assets/jquery.min.js"></script>
+    <script src="/javascripts/registerForm.js"></script>
+    <!-- <script src="/javascripts/main.js"></script> -->
+    <link href="/stylesheets/registerForm.css" rel="stylesheet">
+    <link href="/stylesheets/main.css" rel="stylesheet">
+</head>
 
+<body>
+    <!------ Include the above in your HEAD tag ---------->
 
-<!------ Include the above in your HEAD tag ---------->
-
-<title>Resgister</title>
-<div class="container" style="margin-top: 1em;">
-    <!-- Sign up form -->
-    <form id="registerForm">
-        <!-- Sign up card -->
-        <div class="card">
+    <div class="title">
+        <h1 class="fadeIn">F<span class="red-span">o</span>rmulaire <span class="thin-span">D'inscription</span></h1>
+    </div>
+    <div class="wrapper container">
+        <!-- Sign up form -->
+        <form id="formContent" class="fadeInDown">
+            <!-- Sign up card -->
             <div class="card-body">
-                <h2 id="who_message" class="card-title">Vos Informations</h2>
+                <h2 id="who_message" class="active">Vos Informations</h2>
                 <!-- First row (on medium screen) -->
                 <div class="row">
                     <div class="form-group col-md-4">
@@ -34,13 +42,12 @@
                 <div class="row">
                     <div class="form-group col-md-6">
                         <label for="email" class="col-form-label">Email</label>
-                        <input type="email" class="form-control" id="email" placeholder="example@gmail.com"
-                               required>
+                        <input type="email" class="form-control" id="email" placeholder="example@gmail.com" required>
                     </div>
                     <div class="form-group col-md-6">
                         <label for="email_confirm" class="col-form-label">Confirmation d'email</label>
-                        <input type="email_confirm" class="form-control" id="email_confirm"
-                               placeholder="example@gmail.com" required>
+                        <input type="email_confirm" class="form-control" id="email_confirm" placeholder="example@gmail.com"
+                            required>
                     </div>
                 </div>
                 <div class="row">
@@ -55,24 +62,25 @@
                         </select>
                     </div>
                     <div class="form-group col-md-4">
-                        <label class="col-form-label">Sites</label>
+                        <label class="col-form-label">Site</label>
                         <select id="formationCitiesSelect" class="form-control">
                         </select>
                     </div>
                 </div>
 
-                <h2 class="card-title">Langages maitrisés</h2>
+                <h2 class="active">Langages maitrises</h2>
 
                 <div class="form-group ">
                     <div id="langContainer" class="field-boxes quarter">
                     </div>
                 </div>
                 <div class="custom-btn-group">
-                    <button id="valider" type="submit" class="btn custom-btn btn-primary btn-lg">Valider</button>
+                    <button id="valider" type="submit" class="form-button">Valider</button>
                 </div>
 
             </div>
-        </div>
-</div>
-</form>
-</div>
+        </form>
+    </div>
+</body>
+
+</html>
