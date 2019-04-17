@@ -7,6 +7,8 @@
     <script src="/assets/jquery.min.js"></script>
     <script src="/javascripts/qcm.js"></script>
     <link rel="stylesheet" href="/stylesheets/qcm.css"/>
+    <link rel="stylesheet" href="/stylesheets/main.css"/>
+    <title>QCM</title>
 </head>
 <body>
 
@@ -20,7 +22,7 @@
 <!--</nav>-->
 
 <div class="modal-dialog">
-    <div class="modal-content" id="questionnaire">
+    <div id="formContent" class="" id="questionnaire">
         <p id="timer"></p>
         <div class="modal-header">
             <h3><span class="label label-warning" id="qid">2</span> THREE is CORRECT</h3>
@@ -63,16 +65,8 @@
                                                                                              name="q_answer"
                                                                                              value="4"><span
                             id="textLabel">4 Four</span></label>
-                <button id="SubmitBtn" type="" class="element-animation5 btn btn-primary btn-lg">Valider</button>
+                <button id="SubmitBtn" type="" class="element-animation5 btn btn-primary btn-lg form-button">Valider</button>
             </div>
-        </div>
-    </div>
-    <div id="finish" class="inner">
-        <img src="/images/logoCF.jpg" id="icon" alt="User Icon"/>
-        <div class="text-center">
-            <h1>Bravo, vous avez fini le test !!</h1>
-            <p>Maintenant vous pouvez quitter votre ordinateur ,<br/> je vous souhaite une bonne continuation pour la
-                suite ;)</p>
         </div>
     </div>
 </div>
