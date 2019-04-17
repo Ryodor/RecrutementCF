@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <script src="/assets/js/bootstrap.min.js"></script>
     <script src="/assets/jquery.min.js"></script>
     <script src="/javascripts/qcm.js"></script>
-    <link rel="stylesheet" href="/stylesheets/qcm.css"/>
+    <link rel="stylesheet" href="/stylesheets/qcm.css" />
+    <link rel="stylesheet" href="/stylesheets/main.css" />
+    <title>Finish</title>
 </head>
+
 <body>
-<div></div>
-<div class="modal-dialog">
-    <div id="finish" class="inner">
-        <img src="/images/logoCF.jpg" id="icon" alt="User Icon" />
-        <div class="text-center">
-            <h1><%=text%></h1>
-            <p>Maintenant vous pouvez quitter votre ordinateur ,<br/> je vous souhaite une bonne continuation pour la suite ;)</p>
+    <div class="fadeIn">
+        <img src="../../public/images/logoCF.jpg" id="icon" alt="User Icon" />
+    </div>
+    <div class="modal-dialog">
+        <div id="formContent">
+            <div id="finish" class="inner">
+                <h3><%=text%></h3>
+                <div id="formFooter">
+                    <p>Vous pouvez maintenant quitter votre ordinateur, je vous souhaite une bonne continuation pour la
+                        suite ;)</p>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 </body>
+
 </html>
