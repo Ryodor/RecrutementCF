@@ -392,3 +392,8 @@ label .glyphicon {
     background-color: #cc2828;
     color : white;
 }
+
+.modal-container {
+    max-width: 600px;
+    margin: 1.75rem auto;
+}

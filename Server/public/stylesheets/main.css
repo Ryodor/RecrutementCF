@@ -290,3 +290,15 @@ h2.active {
     margin: auto;
     width:80%;
 }
+
+.marge1{
+  margin-left: 50px;
+}
+
+.marge2{
+  margin-left: 100px;
+}
+
+.marge1{
+  margin-left: 150px;
+}
