@@ -75,6 +75,7 @@ router.get('/start', function (req, res, next) {
                                                     langages: Langages,
                                                     question: question[0],
                                                     questionId: 0,
+                                                    nbQuestions: req.session.user.questions[req.session.user.navigator.currentCategory].length,
                                                     choice: results,
                                                     tiemstamp: req.session.user.currentTimestamp,
                                                     timer:{
@@ -117,6 +118,7 @@ router.get('/start', function (req, res, next) {
                                 langages: Langages,
                                 question: question,
                                 questionId: req.session.user.navigator.currentQuestion,
+                                nbQuestions: req.session.user.questions[req.session.user.navigator.currentCategory].length,
                                 choice: results,
                                 tiemstamp: req.session.user.currentTimestamp,
                                 timer: {
@@ -136,11 +138,10 @@ router.get('/start', function (req, res, next) {
         }else{
             let text = ""
             req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions .";
-            return res.redirect("/finish")
-           /* return res.json({
-                response: {sessionId: req.sessionID,finish : true, finishText: text},
+            return res.json({
+                response: {sessionId: req.sessionID,finish : true},
                 error: ""
-            })*/
+            })
         }
     } else
         return res.send({response: "", error: "Vous n'êtes pas connecter a un compte."})
@@ -160,19 +161,16 @@ router.post('/finish', function (req, res, next) {
                 })
                 let text = ""
                 req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions .";
-                return res.redirect("/finish")
-                /*return res.json({
+                return res.json({
                     response: {
                         sessionID: req.sessionID,
                         finish: true,
-                        finishText: text
                     }, error: ""
-                })*/
+                })
             }else if((req.body.timer.minute > 0 && req.body.timer.second > 0) || (req.body.timer.minute == 0 && req.body.timer.second > 0) || (req.body.timer.minute > 0 && req.body.timer.second == 0)){
-                return res.redirect("/finish")
-                /*return res.json({
-                    response: "", error: "Vous n'avez déjà fini le test ou le temps n'ets aps encore écouler."
-                })*/
+                return res.json({
+                    response: "", error: "Vous n'avez pas fini le test ou le temps n'ets pas encore écouler."
+                })
             }else{
                 let checkQuestion = req.body.response.question;
                 let lastQuestionId = session.user.question[req.session.user.navigator.currentCategory].length
@@ -198,9 +196,10 @@ router.post('/finish', function (req, res, next) {
                 }
             }
         }else if(req.session.user.finish){
-            return res.json({
+            return res.redirect("/finish")
+           /* return res.json({
                 response: "", error: "Vous avez déjà fini le test."
-            })
+            })*/
         }else{
             return res.json({
                 response: "", error: "vous n'avez pas encore commencer le test."
@@ -259,17 +258,16 @@ router.post('/question', function (req, res, next) {
                                         if (error) throw error;
                                         else
                                             console.log("in update")
+
                                     })
-                                    let text = ""
-                                    req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes";
-                                    return res.redirect("/finish")
-                                    /*return res.json({
+                                    //let text = ""
+                                    //req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes";
+                                    return res.json({
                                         response: {
                                             sessionID: req.sessionID,
                                             finish: true,
-                                            finishText: text
                                         }, error: ""
-                                    })*/
+                                    })
                                 } else {
                                     // récupérer la catégorieId , la questionId et langage Id, pour généraliser la route.
                                     changeQuestion(req.session.user, nextQuestion.nextQuestionId, nextQuestion.nextCategoriId).then(newQuestion => {
@@ -306,14 +304,22 @@ router.post('/question', function (req, res, next) {
         }else if(req.session.user.start == false){
             return res.json({response: "", error: "Vous n'avez pas encore commencer le test."})
         }else{
-            return res.json({response: "", error: "Vous avez fini le test , vous en pouvez pas le recommencer !!"})
+            return res.json({
+                response: {
+                    sessionID: req.sessionID,
+                    finish: true,
+                }, error: ""
+            })
+            //return res.json({response: "", error: "Vous avez fini le test , vous en pouvez pas le recommencer !!"})
         }
     } else
-        return res.json({response: "", error: "Vous n'êtes pas connecté à un compte."})
+        return res.redirect('/')
+       // return res.json({response: "", error: "Vous n'êtes pas connecté à un compte."})
 })
 
 router.get('/question', function (req, res, next) {
     console.log(req.query)
+    let nextQuestion = req.query;
     changeQuestion(req.session.user, nextQuestion.nextQuestionId, nextQuestion.nextCategoriId).then(newQuestion => {
         console.log("newQuestion ", newQuestion)
         db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [newQuestion.ID], function (error, results, fields) {
@@ -325,6 +331,7 @@ router.get('/question', function (req, res, next) {
                             sessionID: req.sessionID,
                             question: newQuestion,
                             questionId: req.session.user.navigator.currentQuestion,
+                            nbQuestions: req.session.user.questions[req.session.user.navigator.currentCategory].length,
                             choice: results,
                             tiemstamp: req.session.user.currentTimestamp
                         }, error: ""
@@ -427,7 +434,7 @@ function isFinishAllQuestion (objectUser){
         if(objectUser.questions[objectUser.navigator.allCategoriesExists.length] == null){
             console.log("the last Category have not object")
         }else{
-            console.log(objectUser.questions[objectUser.navigator.allCategoriesExists.length][lastQuestionId])
+            console.log(objectUser.questions[objectUser.navigator.allCategoriesExists.length][lastQuestionId-1])
             console.log(objectUser.navigator.currentQuestion)
             if(objectUser.navigator.allCategoriesExists.length == objectUser.navigator.currentCategory && objectUser.navigator.currentQuestion == objectUser.questions[objectUser.navigator.currentCategory].length -1){
                 return true;
@@ -641,7 +648,7 @@ function changeCategory(object, categoryId) {
  */
 function changeQuestion(object, questionId, catgeoryId) {
     return new Promise((resolve, reject) => {
-        console.log("nbQuestion ",object.questions[catgeoryId].length)
+        console.log("nbQuestion ",object.questions[catgeoryId])
         console.log("nbQuestion ",object.navigator.currentQuestion)
         if (object.questions[catgeoryId] == undefined) {
             changeCategory(object, catgeoryId).then(result=>{
@@ -652,7 +659,7 @@ function changeQuestion(object, questionId, catgeoryId) {
                 }
                 return reject("Catégorie invalide")
             })
-        } else if (object.questions[catgeoryId].length-1 == object.navigator.currentQuestion) {
+        } else if (object.questions[catgeoryId].length-1 == object.navigator.currentQuestion && object.questions[catgeoryId][object.navigator.currentQuestion].answer) {
             changeCategory(object, catgeoryId + 1).then(result=>{
                 if (result) {
                     console.log("")
