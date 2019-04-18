@@ -187,14 +187,14 @@ router.post('/finish', function (req, res, next) {
                     })
                     let text = ""
                     req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions.";
-                    return res.redirect("/finish")
-                    /*return res.json({
+                    res.redirect("/finish")
+                    return res.json({
                         response: {
                             sessionID: req.sessionID,
                             finish: true,
                             finishText: text
                         }, error: ""
-                    })*/
+                    })
                 }
             }
         }else if(req.session.user.finish){
@@ -240,7 +240,6 @@ router.post('/question', function (req, res, next) {
 
                                 req.session.user.currentTimestamp = Date.now()
                                 saveTimerUser(req.session.user)
-
                                 req.session.user.questions[response.categoryId][response.questionId].answer = {
                                     ID: results.insertId,
                                     choiceIds: response.choiceIds
@@ -262,14 +261,15 @@ router.post('/question', function (req, res, next) {
                                     })
                                     let text = ""
                                     req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes";
-                                    return res.redirect("/finish")
-                                    /*return res.json({
-                                        response: {
-                                            sessionID: req.sessionID,
-                                            finish: true,
-                                            finishText: text
-                                        }, error: ""
-                                    })*/
+                                    res.redirect("/finish")
+                                    return true;
+                                    // return res.json({
+                                    //     response: {
+                                    //         sessionID: req.sessionID,
+                                    //         finish: true,
+                                    //         finishText: text
+                                    //     }, error: ""
+                                    // })
                                 } else {
                                     // récupérer la catégorieId , la questionId et langage Id, pour généraliser la route.
                                     changeQuestion(req.session.user, nextQuestion.nextQuestionId, nextQuestion.nextCategoriId).then(newQuestion => {
@@ -422,13 +422,14 @@ function isFinishAllQuestion (objectUser){
     if( objectUser.questions[objectUser.navigator.allCategoriesExists.length] == undefined){
         return false;
     }else{
-        let lastQuestionId = objectUser.questions[objectUser.navigator.allCategoriesExists.length].length
+        let lastQuestionId = objectUser.questions[objectUser.navigator.allCategoriesExists.length].length-1
+        console.log('last Question id : ',lastQuestionId)
 
         if(objectUser.questions[objectUser.navigator.allCategoriesExists.length] == null){
             console.log("the last Category have not object")
         }else{
-            console.log(objectUser.questions[objectUser.navigator.allCategoriesExists.length][lastQuestionId])
-            console.log(objectUser.navigator.currentQuestion)
+            console.log("Last question verif",objectUser.questions[objectUser.navigator.allCategoriesExists.length][lastQuestionId])
+            console.log("Current question ",objectUser.navigator.currentQuestion)
             if(objectUser.navigator.allCategoriesExists.length == objectUser.navigator.currentCategory && objectUser.navigator.currentQuestion == objectUser.questions[objectUser.navigator.currentCategory].length -1){
                 return true;
             }

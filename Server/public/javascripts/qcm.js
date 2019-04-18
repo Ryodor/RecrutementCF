@@ -49,7 +49,7 @@ $(function(){
 
         $.ajax(settings).done(function (data) {
             if(data.response){
-                if(!data.response.finish){
+                //if(!data.response.finish){
                     localStorage.setItem("qcmCategoryId",data.response.question.categoryId)
                     localStorage.setItem("qcmQuestionId",data.response.questionId)
                     localStorage.setItem("qcmCurrentQuestion", data.response.question)
@@ -60,13 +60,9 @@ $(function(){
                     $("#quiz").find("button").val(parseInt(data.response.questionId)+1)
                     loading.hide();
                     $("#quiz").show();
-                }else{
-                    $('#questionnaire').hide();
-                    $("#finish").show();
-                    countdown(2)
-                }
+                
             }else{
-                alert(data.error)
+                alert("Request Error :",data.error)
             }
         });
     	$('#loadbar').show();
@@ -111,25 +107,22 @@ $(function(){
     $.ajax(settings).done(function (data) {
         console.log(data)
         if(data.response){
-            if(!data.response.finish){
-                localStorage.setItem("qcmCategoryId",data.response.question.categoryId)
-                localStorage.setItem("qcmQuestionId",data.response.questionId)
-                localStorage.setItem("qcmCurrentQuestion", data.response.question)
-                $("h3").text(data.response.question.questionText)
-                console.log("before for")
-                for(let i = 0;i<$("#quiz").find("input").length;i++){
-                    $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
-                }
-                $("#quiz").find("button").val(parseInt(data.response.questionId)+1)
-                countdown(1, data.response.timer)
-                $("#quiz").show();
-                loading.hide();
-            }else{
-                $('#questionnaire').hide();
-                $("#finish").show();
+        
+            localStorage.setItem("qcmCategoryId",data.response.question.categoryId)
+            localStorage.setItem("qcmQuestionId",data.response.questionId)
+            localStorage.setItem("qcmCurrentQuestion", data.response.question)
+            $("h3").text(data.response.question.questionText)
+            console.log("before for")
+            for(let i = 0;i<$("#quiz").find("input").length;i++){
+                $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
             }
+            $("#quiz").find("button").val(parseInt(data.response.questionId)+1)
+            countdown(1, data.response.timer)
+            $("#quiz").show();
+            loading.hide();
+
         }else{
-            alert(data.error)
+            alert("Request Error :",data.error)
         }
     });
 
