@@ -1,23 +1,40 @@
-<link href="/assets/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<script src="/assets/css/bootstrap.min.css"></script>
-<script src="/assets/jquery.min.js"></script>
-<script src="/javascripts/explanationScreen.js"></script>
-<link href="/stylesheets/explanationScreen.css" rel="stylesheet">
+<!DOCTYPE html>
+<html>
 
-<div class="container register-form">
-    <div class="form">
-        <div class="note">
-            <h4>infos sessions:</h4>
-            <div id="EmailInfo"></div>
-            <div id="PasswordInfo"></div>
+<head>
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="/assets/js/bootstrap.min.js"></script>
+    <script src="/assets/jquery.min.js"></script>
+    <script src="/javascripts/explanationScreen.js"></script>
+    <link href="/stylesheets/main.css" rel="stylesheet">
+    <link href="/stylesheets/explanationScreen.css" rel="stylesheet">
+    <title>Infos</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+
+<body>
+    <div class="title">
+        <h1 class="fadeIn">Inf<span class="red-span">o</span>rm<span class="thin-span">ations</span></h1>
+    </div>
+
+    <div class="wrapper container">
+        <div id="formContent" class="container register-form">
+            <div class="note-container">
+                <div class="note">
+                    <h3>Session</h3>
+                    <div id="EmailInfo"></div>
+                    <div id="PasswordInfo"></div>
+                </div>
+            </div>
+            <h6>Veuillez bien prendre en notes vos informations de session ci-dessus.</h6>
+            <div id="formFooter">
+                <h3>Ce test est un QCM a choix multiples traitant differentes categories.</h3>
+                <h3> Vous aurez un temps maximum de <span id="timer"><%= timer %></span> minutes pour repondre a toutes
+                    les questions.</h3>
+                <input type="submit" id="startQcm" class="fadeIn fourth form-button" value="Commencer">
+            </div>
         </div>
-
     </div>
-    <div class="jumbotron">
-        <h2 class="display-3">Qu'est ce que vous allez devoir faire !!</h2>
-        <p class="lead">Vous allez devoir repondre a un QCM avec choix multiples, etc....</p>
-        <p> Vous aurez <span id="timer"><%= timer %></span> minutes pour répondre a toute les question , bone chance.</p>
-        <input type="submit" id="startQcm" class="fadeIn fourth" value="Commencer !!">
-    </div>
-</div>
+</body>
 
+</html>

@@ -385,3 +385,15 @@ label .glyphicon {
     margin: auto;
     width:80%;
 }
+.page-link{
+    color : #cc2828;
+}
+.page-link:hover{
+    background-color: #cc2828;
+    color : white;
+}
+
+.modal-container {
+    max-width: 600px;
+    margin: 1.75rem auto;
+}

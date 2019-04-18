@@ -10,7 +10,7 @@ $(document).ready(function () {
         $formation_city = $("#formationCitiesSelect");
 
 
-    $("#registerForm").on('submit', function (e) {
+    $("#formContent").on('submit', function (e) {
         e.preventDefault();
         if(!checkEmail() || !checkFirstName() || !checkLastName() || !checkFormation()) return;
 

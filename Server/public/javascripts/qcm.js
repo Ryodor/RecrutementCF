@@ -5,12 +5,6 @@ $(function () {
     let questionMax = 0;
     let questionMin = 0;
 
-    //Listener on change questions pagination
-    $('#questionPagination li a').click(e=>{
-        e.preventDefault()
-        console.log(e.target.innerHTML)
-    })
-
     // load Page
     var loading = $('#loadbar').hide();
     $("#quiz").hide();

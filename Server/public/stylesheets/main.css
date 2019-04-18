@@ -17,6 +17,24 @@ a {
   font-weight: 400;
 }
 
+h1 {
+  text-align: center;
+  align-items: center;
+  font-size: 75px;
+  font-weight: 600;
+  display:inline-block;
+  margin: 20px 8px 10px 8px; 
+  color: #000000;
+}
+
+h1 .red-span {
+  color: #cc2828;
+}
+
+h1 .thin-span {
+  font-weight: 100;
+}
+
 h2 {
   text-align: center;
   font-size: 16px;
@@ -27,6 +45,10 @@ h2 {
   color: #cccccc;
 }
 
+.title {
+  width: 100%;
+  text-align: center;
+}
 
 
 /* STRUCTURE */
@@ -46,13 +68,17 @@ h2 {
   border-radius: 10px 10px 10px 10px;
   background: #fff;
   padding: 30px;
-  width: 90%;
-  max-width: 450px;
+  width: 100%;
+  max-width: 750px;
   position: relative;
   padding: 20px 0px 0px 0px;
   -webkit-box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
   box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
   text-align: center;
+}
+
+#formContent.small-content {
+  max-width: 450px;
 }
 
 #formFooter {
@@ -75,13 +101,14 @@ h2.inactive {
 h2.active {
   color: #0d0d0d;
   border-bottom: 2px solid #cc2828;
+  margin-top: 10px;
 }
 
 
 
 /* FORM TYPOGRAPHY*/
 
-input[type=button], input[type=submit], input[type=reset]  {
+.form-button  {
   background-color: #cc2828;
   border: none;
   color: white;
@@ -103,11 +130,11 @@ input[type=button], input[type=submit], input[type=reset]  {
   transition: all 0.3s ease-in-out;
 }
 
-input[type=button]:hover, input[type=submit]:hover, input[type=reset]:hover  {
+.form-button:hover  {
   background-color: #cc2828;
 }
 
-input[type=button]:active, input[type=submit]:active, input[type=reset]:active  {
+.form-button:active  {
   -moz-transform: scale(0.95);
   -webkit-transform: scale(0.95);
   -o-transform: scale(0.95);
@@ -115,7 +142,7 @@ input[type=button]:active, input[type=submit]:active, input[type=reset]:active  
   transform: scale(0.95);
 }
 
-input[type=email],input[type=password] {
+.form-control {
   background-color: #f6f6f6;
   border: none;
   color: #0d0d0d;
@@ -136,12 +163,12 @@ input[type=email],input[type=password] {
   border-radius: 5px 5px 5px 5px;
 }
 
-input[type=email]:focus,input[type=password]:focus {
+.form-control:focus {
   background-color: #fff;
   border-bottom: 2px solid #cc2828;
 }
 
-input[type=email]:placeholder,input[type=password]:placeholder {
+.form-control:placeholder {
   color: #cccccc;
 }
 
@@ -262,4 +289,16 @@ input[type=email]:placeholder,input[type=password]:placeholder {
     display: block;
     margin: auto;
     width:80%;
+}
+
+.marge1{
+  margin-left: 50px;
+}
+
+.marge2{
+  margin-left: 100px;
+}
+
+.marge1{
+  margin-left: 150px;
 }

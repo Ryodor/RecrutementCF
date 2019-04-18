@@ -1,7 +1,7 @@
 $(document).ready(function () {
     
-    $("#EmailInfo").html('<p>Email : '+localStorage.getItem('codingLogin')+'</p>');
-    $("#PasswordInfo").html('<p>Password : '+localStorage.getItem('codingPassword')+'</p>');
+    $("#EmailInfo").html('Email : '+localStorage.getItem('codingLogin'));
+    $("#PasswordInfo").html('Password : '+localStorage.getItem('codingPassword'));
     
     $("#startQcm").on('click', function(e){
         e.preventDefault()
