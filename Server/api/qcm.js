@@ -75,6 +75,7 @@ router.get('/start', function (req, res, next) {
                                                     langages: Langages,
                                                     question: question[0],
                                                     questionId: 0,
+                                                    nbQuestions: req.session.user.questions[req.session.user.navigator.currentCategory].length,
                                                     choice: results,
                                                     tiemstamp: req.session.user.currentTimestamp,
                                                     timer:{
@@ -117,6 +118,7 @@ router.get('/start', function (req, res, next) {
                                 langages: Langages,
                                 question: question,
                                 questionId: req.session.user.navigator.currentQuestion,
+                                nbQuestions: req.session.user.questions[req.session.user.navigator.currentCategory].length,
                                 choice: results,
                                 tiemstamp: req.session.user.currentTimestamp,
                                 timer: {
@@ -317,6 +319,7 @@ router.post('/question', function (req, res, next) {
 
 router.get('/question', function (req, res, next) {
     console.log(req.query)
+    let nextQuestion = req.query;
     changeQuestion(req.session.user, nextQuestion.nextQuestionId, nextQuestion.nextCategoriId).then(newQuestion => {
         console.log("newQuestion ", newQuestion)
         db.execute('SELECT * FROM `Choice` WHERE `questionId` = ?', [newQuestion.ID], function (error, results, fields) {
@@ -328,6 +331,7 @@ router.get('/question', function (req, res, next) {
                             sessionID: req.sessionID,
                             question: newQuestion,
                             questionId: req.session.user.navigator.currentQuestion,
+                            nbQuestions: req.session.user.questions[req.session.user.navigator.currentCategory].length,
                             choice: results,
                             tiemstamp: req.session.user.currentTimestamp
                         }, error: ""
@@ -644,7 +648,7 @@ function changeCategory(object, categoryId) {
  */
 function changeQuestion(object, questionId, catgeoryId) {
     return new Promise((resolve, reject) => {
-        console.log("nbQuestion ",object.questions[catgeoryId].length)
+        console.log("nbQuestion ",object.questions[catgeoryId])
         console.log("nbQuestion ",object.navigator.currentQuestion)
         if (object.questions[catgeoryId] == undefined) {
             changeCategory(object, catgeoryId).then(result=>{
@@ -655,7 +659,7 @@ function changeQuestion(object, questionId, catgeoryId) {
                 }
                 return reject("Catégorie invalide")
             })
-        } else if (object.questions[catgeoryId].length-1 == object.navigator.currentQuestion) {
+        } else if (object.questions[catgeoryId].length-1 == object.navigator.currentQuestion && object.questions[catgeoryId][object.navigator.currentQuestion].answer) {
             changeCategory(object, catgeoryId + 1).then(result=>{
                 if (result) {
                     console.log("")
