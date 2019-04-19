@@ -65,12 +65,12 @@ $(function () {
                     localStorage.removeItem("qcmCategoryId");
                     localStorage.removeItem("qcmQuestionId");
                     localStorage.removeItem("qcmCurrentQuestion");
-                    localStorage.setItem("qcmCategoryId", data.response.question.categoryId)
-                    localStorage.setItem("qcmQuestionId", data.response.questionId)
-                    localStorage.setItem("qcmCurrentQuestion", data.response.question)
-                    changePaginationPosition('#categoriePagination',data.response.question.categoryId,categoriMax,categoriMin)
-                    changePaginationPosition('#questionPagination',data.response.questionId+1,questionMax,questionMin)
-                    $("h3").text(data.response.question.questionText)
+                    localStorage.setItem("qcmCategoryId", data.response.question.categoryId);
+                    localStorage.setItem("qcmQuestionId", data.response.questionId);
+                    localStorage.setItem("qcmCurrentQuestion", data.response.question);
+                    changePaginationPosition('#categoriePagination',data.response.question.categoryId,categoriMax,categoriMin);
+                    changePaginationPosition('#questionPagination',data.response.questionId+1,questionMax,questionMin);
+                    $("h3").text(data.response.question.questionText);
                     for (let i = 0; i < $("#quiz").find("input").length; i++) {
                         $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
                     }
@@ -101,7 +101,18 @@ $(function () {
             $(this).addClass("btn-danger");
         } else {
             $(this).addClass("btn-light");
-            $(this).removeClass("btn-red");
+            $(this).removeClass("btn-danger");
+        }
+        if($(this).children("input").val() == 5){
+            $(".known-choice").addClass("btn-light")
+            $(".known-choice").removeClass("btn-danger")
+            $(".known-choice").find("input:checked").prop("checked", false);
+            console.log($("#quiz").children("label").last())
+
+        }else{
+            $(".unknown-choice").removeClass("btn-danger")
+            $(".unknown-choice").addClass("btn-light")
+            $(".unknown-choice").find("input:checked").prop("checked", false);
         }
 
     });
@@ -124,7 +135,6 @@ $(function () {
         console.log(data)
         if (data.response) {
             if (!data.response.finish) {
-                console.log(data.response)
                 categoriMin = data.response.categories[0].ID
                 categoriMax = data.response.categories[data.response.categories.length-1].ID
                 questionMin = questionMin+1
@@ -357,10 +367,13 @@ $(function () {
                         stopCuntdown()
                         window.location.assign("/finish")
                     } else {
+                        localStorage.clear()
                         localStorage.setItem("qcmCategoryId", data.response.question.categoryId)
                         localStorage.setItem("qcmQuestionId", data.response.questionId)
                         localStorage.setItem("qcmCurrentQuestion", data.response.question)
                         $("h3").text(data.response.question.questionText)
+                        changePaginationPosition('#categoriePagination',data.response.question.categoryId,categoriMax,categoriMin);
+                        changePaginationPosition('#questionPagination',data.response.questionId+1,questionMax,questionMin);
                         for (let i = 0; i < $("#quiz").find("input").length; i++) {
                             $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
                         }
@@ -375,7 +388,7 @@ $(function () {
             })
             $('#loadbar').show();
             $('#quiz').fadeOut();
-            changePaginationPosition('#categoriePagination',parseInt($(e.target).attr('value')),categoriMax,categoriMin)
+            //changePaginationPosition('#categoriePagination',parseInt($(e.target).attr('value')),categoriMax,categoriMin)
         });
 
         // Question parti
