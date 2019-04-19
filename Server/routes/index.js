@@ -65,9 +65,18 @@ router.get('/qcm', loggedIn,function (req, res, next) {
 })
 
 router.get('/finish', loggedIn,function (req, res, next) {
-    let text = ""
-    req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions.";
-    res.render('finish',{ text: text });
+    if(req.session.user){
+        if(req.session.user.finish){
+            let text = ""
+            req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions.";
+            res.render('finish',{ text: text })
+        }
+        else
+            res.redirect('/qcm');
+    }else{
+        res.redirect('/login');
+    }
+
 })
 
 router.post('/upload', function(req, res, next) {
