@@ -4,7 +4,7 @@ module.exports.loggedIn = function(req, res, next) {
     } else {
         res.json({
             response: "",
-            error: "Erreur, vous n'êtes pas connecté."
+            error: "Erreur, vous n'êtes pas connectés."
         });
     }
 }
@@ -34,7 +34,7 @@ module.exports.getAllCategories = function() {
             } else {
                 reject({
                     response: "",
-                    error: "Erreur, aucune categories trouvé."
+                    error: "Erreur, aucune categorie trouvée."
                 })
             }
         })
@@ -242,7 +242,7 @@ function generateQuestionsByCategory(catgeroyId, langIds, nbQuestionGenerate) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver."})
+                    return reject({response: "", error: "Aucune question n\'a été trouvée."})
             })
         } else {
             db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT ' + nbQuestionGenerate, [parseInt(catgeroyId)], function (error, results, fields) {
@@ -252,7 +252,7 @@ function generateQuestionsByCategory(catgeroyId, langIds, nbQuestionGenerate) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver."})
+                    return reject({response: "", error: "Aucune question n\'a été trouvée."})
             })
         }
     })
@@ -297,7 +297,7 @@ module.exports.checkObjectUserRegister = function(user) {
                     else
                         check.errorValue.push(user[key])
                 }
-                // TODO : dans le futur pourra verifier si les valeur sont bonne
+                // TODO : dans le futur pourra verifier si les valeurs sont bonnes
 
                 /*                if (key == "formationName") {
                                     db.execute('SELECT * FROM `Formations`', function (error, results, fields) {

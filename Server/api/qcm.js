@@ -2,7 +2,7 @@ let express = require('express');
 let router = express.Router();
 
 router.get('/', function (req, res, next) {
-    res.send("Sa semble fonctionner")
+    res.send("Ca semble fonctionner")
     console.log(req.session.user)
     res.send(req.session.user)
 })
@@ -83,16 +83,16 @@ router.get('/start', function (req, res, next) {
                                                 }, error: ""
                                             });
                                         } else
-                                            return res.json({response: "", error: "Aucune choix n\'a était trouver."})
+                                            return res.json({response: "", error: "Aucun choix n\'a été trouve."})
                                     })
                             })
                             .catch(error => {
                                 throw error
-                                return res.json({response: "", error: "Aucune question n\'a était trouver 3. "+error})
+                                return res.json({response: "", error: "Aucune question n\'a été trouvée 3. "+error})
                             })
                     } else {
                         return res.json({
-                            response: "", error: "Une erreur et survenue a la récupération des lang du candidat"
+                            response: "", error: "Une erreur est survenue a la récupération des langages du candidat"
                         });
                     }
                 })
@@ -131,21 +131,21 @@ router.get('/start', function (req, res, next) {
                     } else {
                         return res.json({
                             response: "",
-                            error: "Error pas de question trouver dans la session user"
+                            error: "Error pas de question trouvée dans la session user"
                         })
                     }
                 })
             }
         }else{
             let text = ""
-            req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions .";
+            req.session.user.navigator.qcmTimer == 0? text = "Temps écoulé , le test est fini." : text = "Bravo, vous avez fini le test en répondant à toutes les questions.";
             return res.json({
                 response: {sessionId: req.sessionID,finish : true},
                 error: ""
             })
         }
     } else
-        return res.send({response: "", error: "Vous n'êtes pas connecter a un compte."})
+        return res.send({response: "", error: "Vous n'êtes pas connectés a un compte."})
 
 })
 
@@ -161,7 +161,7 @@ router.post('/finish', function (req, res, next) {
                         console.log("in update")
                 })
                 let text = ""
-                req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions .";
+                req.session.user.navigator.qcmTimer == 0? text = "Temps écoulé , le test est fini." : text = "Bravo, vous avez fini le test en répondant à toutes les questions.";
                 return res.json({
                     response: {
                         sessionID: req.sessionID,
@@ -170,7 +170,7 @@ router.post('/finish', function (req, res, next) {
                 })
             }else if((req.body.timer.minute > 0 && req.body.timer.second > 0) || (req.body.timer.minute == 0 && req.body.timer.second > 0) || (req.body.timer.minute > 0 && req.body.timer.second == 0)){
                 return res.json({
-                    response: "", error: "Vous n'avez pas fini le test ou le temps n'ets pas encore écouler."
+                    response: "", error: "Vous n'avez pas fini le test ou le temps n'est pas encore écoulé."
                 })
             }else{
                 let checkQuestion = req.body.response.question;
@@ -185,7 +185,7 @@ router.post('/finish', function (req, res, next) {
                             console.log("in update")
                     })
                     let text = ""
-                    req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions.";
+                    req.session.user.navigator.qcmTimer == 0? text = "Temps ecoulé , le test est fini." : text = "Bravo, vous avez fini le test en répondant à toutes les questions.";
                     return res.redirect("/finish")
                     /*return res.json({
                         response: {
@@ -203,12 +203,12 @@ router.post('/finish', function (req, res, next) {
             })*/
         }else{
             return res.json({
-                response: "", error: "vous n'avez pas encore commencer le test."
+                response: "", error: "Vous n'avez pas encore commencé le test."
             })
         }
     }else{
         return res.json({
-            response: "", error: "Vous n'êtes pas connecter"
+            response: "", error: "Vous n'êtes pas connectés"
         })
     }
 })
@@ -291,7 +291,7 @@ router.post('/question', function (req, res, next) {
                                                     }
                                                     return res.json({response: "", error: newQuestion})
                                                 } else
-                                                    return res.json({response: "", error: "Aucune choix n\'a était trouver."})
+                                                    return res.json({response: "", error: "Aucun choix n\'a été trouvé."})
                                             });
                                         })
                                     }
@@ -357,7 +357,7 @@ router.post('/question', function (req, res, next) {
                                                     }
                                                     return res.json({response: "", error: newQuestion})
                                                 } else
-                                                    return res.json({response: "", error: "Aucune choix n\'a était trouver."})
+                                                    return res.json({response: "", error: "Aucun choix n\'a été trouvé."})
                                             });
                                         })
                                     }
@@ -369,10 +369,10 @@ router.post('/question', function (req, res, next) {
             } else
                 return res.json({
                     response: "",
-                    error: "Valeur ou/et syntax sont invalide " + validResponse.errorValue.toString()
+                    error: "Valeurs et/ou syntaxes sont invalides " + validResponse.errorValue.toString()
                 })
         }else if(req.session.user.start == false){
-            return res.json({response: "", error: "Vous n'avez pas encore commencer le test."})
+            return res.json({response: "", error: "Vous n'avez pas encore commencé le test."})
         }else{
             return res.json({
                 response: {
@@ -380,11 +380,11 @@ router.post('/question', function (req, res, next) {
                     finish: true,
                 }, error: ""
             })
-            //return res.json({response: "", error: "Vous avez fini le test , vous en pouvez pas le recommencer !!"})
+            //return res.json({response: "", error: "Vous avez fini le test , vous ne pouvez pas le recommencer !!"})
         }
     } else
         return res.redirect('/')
-       // return res.json({response: "", error: "Vous n'êtes pas connecté à un compte."})
+       // return res.json({response: "", error: "Vous n'êtes pas connectés à un compte."})
 })
 
 router.get('/question', function (req, res, next) {
@@ -409,7 +409,7 @@ router.get('/question', function (req, res, next) {
                 }
                 return res.json({response: "", error: newQuestion})
             } else
-                return res.json({response: "", error: "Aucune choix n\'a était trouver."})
+                return res.json({response: "", error: "Aucun choix n\'a été trouvé."})
         });
     })
 })
@@ -459,7 +459,7 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver 2."})
+                    return reject({response: "", error: "Aucune question n\'a été trouvée 2."})
             })
         } else{
             db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT 5',[catgeroyId], function (error, results, fields) {
@@ -469,7 +469,7 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver 1."})
+                    return reject({response: "", error: "Aucune question n\'a été trouvée 1."})
             })
         }
     })
@@ -625,7 +625,7 @@ function isValidChoiceForTheQuestion(userChoices, questionsId) {
                 else
                     return resolve(0)
             } else
-                return reject({response: "", error: "Aucune question n\'a était trouver."})
+                return reject({response: "", error: "Aucune question n\'a été trouvée."})
             console.log("================================================")
         })
     })
@@ -748,7 +748,7 @@ function changeCategory(object, categoryId) {
             if (!findKey) {
                 generateQuestionsByCategory(categoryId, object.languages)
                     .then(result => {
-                        console.log('sa fonctionne')
+                        console.log('ca fonctionne')
                         object.navigator.currentCategory = categoryId;
                         object.questions[categoryId] = result
                         resolve(true);
@@ -810,7 +810,7 @@ function changeQuestion(object, questionId, catgeoryId) {
                 return reject("Catégorie invalide 1")
             }).catch(error=>{console.log(error)})
         } else if (object.questions[catgeoryId].length-1 == object.navigator.currentQuestion && object.questions[catgeoryId][object.navigator.currentQuestion].answer && object.navigator.currentCategory != object.navigator.allCategoriesExists.length) {
-            console.log("Change Categorie beacause is last question")
+            console.log("Change Categorie because is last question")
             changeCategory(object, catgeoryId + 1).then(result=>{
                 console.log("Result :",result)
                 if (result) {
@@ -868,7 +868,7 @@ function changeQuestion(object, questionId, catgeoryId) {
                 object.navigator.currentQuestion = questionId
                 return resolve(object.questions[catgeoryId][questionId])
             }
-            return reject("categoryId ou questionId Invalide")
+            return reject("categoryId ou questionId invalide")
         }
     })
 }
