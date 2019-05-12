@@ -42,7 +42,7 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver 2."})
+                    return reject({response: "", error: "Aucune question n\'a été trouvée 2."})
             })
         } else{
             db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT 5',[catgeroyId], function (error, results, fields) {
@@ -52,7 +52,7 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver 1."})
+                    return reject({response: "", error: "Aucune question n\'a été trouvée 1."})
             })
         }
     })
@@ -162,7 +162,7 @@ function isValidChoiceForTheQuestion(userChoices, questionsId) {
                 else
                     return resolve(0)
             } else
-                return reject({response: "", error: "Aucune question n\'a était trouver."})
+                return reject({response: "", error: "Aucune question n\'a été trouvée."})
             console.log("================================================")
         })
     })
@@ -330,7 +330,7 @@ function changeQuestion(object, questionId, catgeoryId) {
                 object.navigator.currentQuestion = questionId
                 return resolve(object.questions[catgeoryId][questionId])
             }
-            return reject("categoryId ou questionId Invalide")
+            return reject("categoryId ou questionId invalide")
         }
     })
 }

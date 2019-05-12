@@ -71,9 +71,9 @@ router.post('/login', function (req, res, next) {
                                             restoreTimestampQcm(req.session.user)
                                             console.log("restoreDataQcm ", response)
                                             if (response)
-                                                console.log("données réstauré")
+                                                console.log("données réstaurées")
                                             else
-                                                console.log("acunne données réstauré")
+                                                console.log("aucune donnée réstaurée")
                                             console.log("req.session ", req.session)
                                             console.log("req.sessionId ", req.sessionID)
                                             //res.set('Set-Cookie', req.session.cookie);
@@ -95,12 +95,12 @@ router.post('/login', function (req, res, next) {
         } else
             return res.json({
                 response: "",
-                error: "Valeur ou/et syntax, envoyer sont invalide  " + checkLogin.errorValue.toString()
+                error: "Valeurs et/ou syntaxes, envoyées sont invalides " + checkLogin.errorValue.toString()
             })
     } else
         res.json({
             response: "",
-            error: "Vous êtes déjà connecter"
+            error: "Vous êtes déjà connectés"
         })
     console.log("req.sessionId ", req.sessionID)
     console.log("session cookie", req.session.cookie)
@@ -178,17 +178,17 @@ router.post('/register', function (req, res, next) {
 
                         })
                 } else
-                    return res.json({response: "", error: "L'email a déjà était enregistré."})
+                    return res.json({response: "", error: "L'email a déjà été enregistré."})
             });
         } else
             return res.json({
                 response: "",
-                error: "Valeur ou/et syntax sont invalide " + checkRegister.errorValue.toString()
+                error: "Valeurs et/ou syntaxes sont invalides " + checkRegister.errorValue.toString()
             })
     } else
         res.json({
             response: "",
-            error: "Vous êtes déjà connecter"
+            error: "Vous êtes déjà connectés"
         })
 });
 
@@ -206,7 +206,7 @@ router.get('/lang', function (req, res, next) {
         } else
             return res.json({
                 response: "",
-                error: "Erreur, aucun langage trouver"
+                error: "Erreur, aucun langage trouvé"
             })
     })
 })
@@ -272,7 +272,7 @@ function loggedIn(req, res, next) {
     } else {
         res.json({
             response: "",
-            error: "Erreur, vous n'êtes pas connecté."
+            error: "Erreur, vous n'êtes pas connectés."
         });
     }
 }
@@ -302,7 +302,7 @@ function getAllCategories() {
             } else {
                 reject({
                     response: "",
-                    error: "Erreur, aucune categories trouvé."
+                    error: "Erreur, aucune categorie trouvée."
                 })
             }
         })
@@ -514,7 +514,7 @@ function generateQuestionsByCategory(catgeroyId, langIds, nbQuestionGenerate) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver."})
+                    return reject({response: "", error: "Aucune question n\'a été trouvée."})
             })
         } else {
             db.execute('SELECT * FROM `Question` WHERE  `categoryId` = ? ORDER BY RAND() LIMIT ' + nbQuestionGenerate, [parseInt(catgeroyId)], function (error, results, fields) {
@@ -524,7 +524,7 @@ function generateQuestionsByCategory(catgeroyId, langIds, nbQuestionGenerate) {
                     console.log("results ", results)
                     return resolve(results)
                 } else
-                    return reject({response: "", error: "Aucune question n\'a était trouver."})
+                    return reject({response: "", error: "Aucune question n\'a été trouvée."})
             })
         }
     })
