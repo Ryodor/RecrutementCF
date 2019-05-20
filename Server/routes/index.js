@@ -68,7 +68,7 @@ router.get('/finish', loggedIn,function (req, res, next) {
     if(req.session.user){
         if(req.session.user.finish){
             let text = ""
-            req.session.user.navigator.qcmTimer == 0? text = "Temps ecouler , le test et finis." : text = "Bravo, vous avez fini le test en répondent a toutes les questions.";
+            req.session.user.navigator.qcmTimer == 0? text = "Temps ecoulé, le test est fini." : text = "Bravo, vous avez fini le test en répondant à toutes les questions.";
             res.render('finish',{ text: text })
         }
         else
@@ -91,12 +91,12 @@ router.post('/upload', function(req, res, next) {
     try {
         JSON.parse(file.data.toString())
     }catch (e) {
-        return res.status(400).send("Le fichier , a une syntax JSON invalide !");
+        return res.status(400).send("Le fichier, a une syntax JSON invalide !");
     }
 
     dataTranformJSONToInsertQuestionInDB(JSON.parse(file.data.toString()))
 
-    res.send('Fichier uploader sur le serveur.');
+    res.send('Fichier uploadé sur le serveur.');
 });
 
 function loggedIn(req, res, next) {
