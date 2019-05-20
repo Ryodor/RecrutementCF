@@ -55,6 +55,7 @@ router.get('/start', function (req, res, next) {
                                 req.session.user.currentTimestamp = Date.now()
                                 //req.session.user.navigator.qcmTimer = "00:30:00"
                                 req.session.user.navigator.allCategoriesExists = Categories
+                                req.session.user.questions.CurrentCategoriFinishQuestion = sendCategorieFinishQuestion(req.session.user)
 
                                     db.execute('SELECT * FROM `Choice` WHERE `questionId` = ? OR `ID` = ?', [question[0].ID, 189], function (error, results, fields) {
                                         if (error) throw error;
@@ -75,6 +76,8 @@ router.get('/start', function (req, res, next) {
                                                     questionId: 0,
                                                     nbQuestions: req.session.user.questions[req.session.user.navigator.currentCategory].length,
                                                     choice: results,
+                                                    finishQuestionsByCategorie: req.session.user.questions.CurrentCategoriFinishQuestion,
+                                                    finishCategorie: sendCategorieFinishAllQuestions(req.session.user),
                                                     tiemstamp: req.session.user.currentTimestamp,
                                                     timer:{
                                                         minutes: timer[1],
@@ -107,6 +110,7 @@ router.get('/start', function (req, res, next) {
                         req.session.user.currentTimestamp = Date.now()
                         saveTimerUser(req.session.user)
                         let timer = req.session.user.navigator.qcmTimer.split(":")
+                        req.session.user.questions.CurrentCategoriFinishQuestion = sendCategorieFinishQuestion(req.session.user)
                         console.log("timer :",timer)
                         results.forEach(element=>{
                             delete element.rightAnswer
@@ -121,6 +125,8 @@ router.get('/start', function (req, res, next) {
                                 questionId: req.session.user.navigator.currentQuestion,
                                 nbQuestions: req.session.user.questions[req.session.user.navigator.currentCategory].length,
                                 choice: results,
+                                finishQuestionsByCategorie: req.session.user.questions.CurrentCategoriFinishQuestion,
+                                finishCategorie: sendCategorieFinishAllQuestions(req.session.user),
                                 tiemstamp: req.session.user.currentTimestamp,
                                 timer: {
                                     minutes: timer[1],
@@ -279,12 +285,15 @@ router.post('/question', function (req, res, next) {
                                                 if (results.length > 0) {
                                                     if (typeof newQuestion != "string") {
                                                         results.push({ID:189,text:"Je ne sais pas.",questionId: null})
+                                                        req.session.user.questions.CurrentCategoriFinishQuestion = sendCategorieFinishQuestion(req.session.user)
                                                         return res.json({
                                                             response: {
                                                                 sessionID: req.sessionID,
                                                                 question: newQuestion,
                                                                 questionId: req.session.user.navigator.currentQuestion,
                                                                 choice: results,
+                                                                finishQuestionsByCategorie: req.session.user.questions.CurrentCategoriFinishQuestion,
+                                                                finishCategorie: sendCategorieFinishAllQuestions(req.session.user),
                                                                 tiemstamp: req.session.user.currentTimestamp
                                                             }, error: ""
                                                         })
@@ -345,12 +354,15 @@ router.post('/question', function (req, res, next) {
                                                 if (results.length > 0) {
                                                     if (typeof newQuestion != "string") {
                                                         results.push({ID:189,text:"Je ne sais pas.",questionId: null})
+                                                        req.session.user.questions.CurrentCategoriFinishQuestion = sendCategorieFinishQuestion(req.session.user)
                                                         return res.json({
                                                             response: {
                                                                 sessionID: req.sessionID,
                                                                 question: newQuestion,
                                                                 questionId: req.session.user.navigator.currentQuestion,
                                                                 choice: results,
+                                                                finishQuestionsByCategorie: req.session.user.questions.CurrentCategoriFinishQuestion,
+                                                                finishCategorie: sendCategorieFinishAllQuestions(req.session.user),
                                                                 tiemstamp: req.session.user.currentTimestamp
                                                             }, error: ""
                                                         })
@@ -396,6 +408,7 @@ router.get('/question', function (req, res, next) {
             if (error) throw error;
             if (results.length > 0) {
                 if (typeof newQuestion != "string") {
+                    req.session.user.questions.CurrentCategoriFinishQuestion = sendCategorieFinishQuestion(req.session.user)
                     return res.json({
                         response: {
                             sessionID: req.sessionID,
@@ -403,6 +416,8 @@ router.get('/question', function (req, res, next) {
                             questionId: req.session.user.navigator.currentQuestion,
                             nbQuestions: req.session.user.questions[req.session.user.navigator.currentCategory].length,
                             choice: results,
+                            finishQuestionsByCategorie: req.session.user.questions.CurrentCategoriFinishQuestion,
+                            finishCategorie: sendCategorieFinishAllQuestions(req.session.user),
                             tiemstamp: req.session.user.currentTimestamp
                         }, error: ""
                     })
@@ -456,7 +471,7 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
                 if (error)reject({response: "", error: error});
 
                 if (results.length > 0) {
-                    console.log("results ", results)
+                    //console.log("results ", results)
                     return resolve(results)
                 } else
                     return reject({response: "", error: "Aucune question n\'a était trouver 2."})
@@ -466,7 +481,7 @@ function generateQuestionsByCategory(catgeroyId, langIds) {
                 if (error) reject({response: "", error: error});
 
                 if (results.length > 0) {
-                    console.log("results ", results)
+                    //console.log("results ", results)
                     return resolve(results)
                 } else
                     return reject({response: "", error: "Aucune question n\'a était trouver 1."})
@@ -601,7 +616,7 @@ function isValidChoiceForTheQuestion(userChoices, questionsId) {
             if (results.length > 0) {
                 let numberChoiceIsValid = 0;
                 let validChoice = 0;
-                console.log("results", results)
+                //console.log("results", results)
                 console.log("user choice ",userChoices)
                 results.forEach(choice => {
                     if (choice.rightAnswer == 1)
@@ -881,6 +896,38 @@ function searchQuestionNotAwnserInCategory(id, object){
         }
     }
     searchQuestionNotAwnserInCategory(id+1, object)
+}
+
+function sendCategorieFinishQuestion(object){
+    let  arrayValidFinishQuestions = [];
+    let checkQuestion = object.questions[object.navigator.currentCategory];
+    console.log('check q :',checkQuestion)
+    checkQuestion.forEach((element,index)=>{
+        if(element.answer != undefined){
+            arrayValidFinishQuestions.push(index+1)
+        }
+    })
+    return arrayValidFinishQuestions;
+}
+
+function sendCategorieFinishAllQuestions(object){
+    let  arrayValidFinishQuestions = [];
+    let checkQuestion = object.questions;
+    console.log('check q :',checkQuestion)
+    checkQuestion.forEach((catgeory,index)=>{
+        let validQuestions = 0;
+        if(catgeory != undefined){
+            catgeory.forEach(question=>{
+                if(question.answer != undefined){
+                    validQuestions+=1;
+                }
+            })
+            if(validQuestions == 5){
+                arrayValidFinishQuestions.push(index)
+            }
+        }
+    })
+    return arrayValidFinishQuestions;
 }
 
 module.exports = router;

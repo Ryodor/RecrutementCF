@@ -4,6 +4,8 @@ $(function () {
     let categoriMin = 0;
     let questionMax = 0;
     let questionMin = 0;
+    let currentQuestion = 0;
+    let currentCategori = 0;
 
     // load Page
     var loading = $('#loadbar').hide();
@@ -19,6 +21,7 @@ $(function () {
     let choices = [];
     $("#SubmitBtn").on('click', function () {
         //var choice = $(this).find('input:radio').val();
+        searchQuestionPagination();
         $("#quiz").hide();
         loading.show();
 
@@ -70,6 +73,9 @@ $(function () {
                     localStorage.setItem("qcmCurrentQuestion", data.response.question);
                     changePaginationPosition('#categoriePagination',data.response.question.categoryId,categoriMax,categoriMin);
                     changePaginationPosition('#questionPagination',data.response.questionId+1,questionMax,questionMin);
+                    currentQuestion = data.response.question.ID;
+                    currentCategori = data.response.question.categoryId;
+                    restoreFinishQuestion(data.response.finishQuestionsByCategorie,data.response.finishCategorie)
                     $("h3").text(data.response.question.questionText);
                     for (let i = 0; i < $("#quiz").find("input").length; i++) {
                         $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
@@ -145,6 +151,9 @@ $(function () {
                 localStorage.setItem("qcmCurrentQuestion", data.response.question)
                 restoreCategoryPagiation(data.response.categories)
                 restoreQuestionPagination(data.response.nbQuestions)
+                currentQuestion = data.response.question.ID;
+                currentCategori = data.response.question.categoryId;
+                restoreFinishQuestion(data.response.finishQuestionsByCategorie,data.response.finishCategorie)
                 clickOnButtonPagination()
                 $("h3").text(data.response.question.questionText)
                 console.log("before for")
@@ -256,10 +265,10 @@ $(function () {
                 console.log(categoryIdNow)
                 if(categoryIdNow == element.ID){
                     $('#categoriePagination')
-                        .append("<li class='page-item disabled'><a class='page-link'  tabindex='-1' aria-disabled='true' href='#' value='"+element.ID+"'>"+element.categoryName+"</a></li>")
+                        .append("<li class='page-item disabled number'><a class='page-link'  tabindex='-1' aria-disabled='true' href='#' value='"+element.ID+"'>"+element.categoryName+"</a></li>")
                 }else{
                     $('#categoriePagination')
-                        .append("<li class='page-item'><a class='page-link' value='"+element.ID+"' href='#'>"+element.categoryName+"</a></li>")
+                        .append("<li class='page-item number'><a class='page-link' value='"+element.ID+"' href='#'>"+element.categoryName+"</a></li>")
                 }
             })
             if(categoryIdNow < 5) {
@@ -287,10 +296,10 @@ $(function () {
             for(let i = 0;i<=nbQuestion-1;i++){
                 if(questionIdNow == i){
                     $('#questionPagination')
-                        .append("<li class='page-item disabled'><a class='page-link'  tabindex='-1' aria-disabled='true' href='#' value='"+(i+1)+"'>"+(i+1)+"</a></li>")
+                        .append("<li class='page-item disabled number'><a class='page-link'  tabindex='-1' aria-disabled='true' href='#' value='"+(i+1)+"'>"+(i+1)+"</a></li>")
                 }else{
                     $('#questionPagination')
-                        .append("<li class='page-item'><a class='page-link' value='"+(i+1)+"' href='#'>"+(i+1)+"</a></li>")
+                        .append("<li class='page-item number'><a class='page-link' value='"+(i+1)+"' href='#'>"+(i+1)+"</a></li>")
                 }
             }
             if(questionIdNow < 5) {
@@ -314,6 +323,11 @@ $(function () {
         console.log("CatMax :",maxField)
         console.log("CatMin :",minField)
         console.log("CatNow :",idField)
+        console.log("CatNow2 :",currentCategori)
+        console.log('modifField : ',modifField)
+        if(modifField == '#categoriePagination' && idField != currentCategori){
+            $('#questionPagination').children().children().removeClass('finish').css({'background-color':'','color':''})
+        }
         if(idField > minField && idField < maxField){
             $(modifField).find('li.disabled').removeClass('disabled')
             $($(modifField).find('a')[idField]).parent().addClass('disabled')
@@ -374,6 +388,9 @@ $(function () {
                         $("h3").text(data.response.question.questionText)
                         changePaginationPosition('#categoriePagination',data.response.question.categoryId,categoriMax,categoriMin);
                         changePaginationPosition('#questionPagination',data.response.questionId+1,questionMax,questionMin);
+                        currentQuestion = data.response.question.ID;
+                        currentCategori = data.response.question.categoryId;
+                        restoreFinishQuestion(data.response.finishQuestionsByCategorie,data.response.finishCategorie)
                         for (let i = 0; i < $("#quiz").find("input").length; i++) {
                             $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
                         }
@@ -410,9 +427,15 @@ $(function () {
                         stopCuntdown()
                         window.location.assign("/finish")
                     } else {
+                        currentQuestion = data.response.question.ID;
+                        currentCategori = data.response.question.categoryId;
+                        localStorage.clear()
                         localStorage.setItem("qcmCategoryId", data.response.question.categoryId)
                         localStorage.setItem("qcmQuestionId", data.response.questionId)
                         localStorage.setItem("qcmCurrentQuestion", data.response.question)
+                        restoreFinishQuestion(data.response.finishQuestionsByCategorie,data.response.finishCategorie)
+                        currentQuestion = data.response.question.ID;
+                        currentCategori = data.response.question.categoryId;
                         $("h3").text(data.response.question.questionText)
                         for (let i = 0; i < $("#quiz").find("input").length; i++) {
                             $("#quiz").find("label span[id=textLabel]")[i].innerHTML = data.response.choice[i].textResponse
@@ -431,6 +454,33 @@ $(function () {
             changePaginationPosition('#questionPagination',parseInt($(e.target).attr('value')),questionMax,questionMin)
         });
 
+    }
+
+    function searchQuestionPagination(){
+        let question = $('#questionPagination').find('.number.disabled').children()
+        changeColorPagination(question)
+    }
+
+
+    function changeColorPagination(element){
+        if(!element.hasClass("finish")){
+            element.addClass("finish").css({'background-color':'#4ff04f','color':'#159115'})
+        }
+    }
+    
+    function restoreFinishQuestion(questions, categories) {
+        questions.forEach((element,index)=>{
+            let selection = $($('#questionPagination').children()[element])
+            if(!selection.children().hasClass("finish")){
+                selection.children().addClass('finish').css({'background-color':'#4ff04f','color':'#159115'})
+            }
+        })
+        categories.forEach((element,index)=>{
+            let selection = $($('#categoriePagination').children()[element])
+            if(!selection.children().hasClass("finish")){
+                selection.children().addClass('finish').css({'background-color':'#4ff04f','color':'#159115'})
+            }
+        })
     }
 
 
